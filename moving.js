@@ -38,7 +38,7 @@ for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, 
 var frame_start = 61; //начальный кадр мотания
 var frame_end = 75;   //начальный кадр мотания
 var frame_current = frame_start + Math.round(motanie_frames / 2); //текущий кадр анимации (при запуске - центр)
-var frame_sx; //горизонтальное смещение кадра в вертикальном режиме (мобила) - привязать к высоте канваса
+var frame_sx = 0.25; //горизонтальное смещение кадра в вертикальном режиме (мобила) - привязать к высоте канваса
 var animationID; // requestID анимации, для остановки
 var started = false; //флаг, true - анимация происходит в настоящий момент
 
@@ -52,7 +52,7 @@ const container = document.querySelector(".container");
 const canvas = document.querySelector("canvas");
 canvas.height = img_height; //вертикальное разрешение постоянное (горизонтальное меняется в вертикальном режиме)
 var context = canvas.getContext("2d");
-var canvas_mode = 1;  // 1 - горизонтальный режим, 0 - вертикальная ориентация
+var canvas_mode = true;  // true - горизонтальный режим (canvas включен), false - вертикальная ориентация
 
 /*********************** Listeners ***********************/
 // запуск при загрузке 
@@ -66,10 +66,8 @@ window.addEventListener("load", () => {
 // resize window
 window.addEventListener("resize", () => { canvasResize() });
 function canvasResize() {
-    canvas_mode = (innerWidth > innerHeight)  //вертикальная ориентация
-    frame_sx = 0.25 * canvas.height; //горизонтальное смещение кадра в вертикальном режиме (мобила)
-    //    container.style.backgroundPosition = (canvas_mode ? 0 : -frame_sx) + "px";
-    let rate = (canvas_mode ? img_rate : 1.2); //соотношение сторон канваса в гориз. или вертик. режимах
+    canvas_mode = (innerWidth < innerHeight)  //горизонтальная ориентация
+    let rate = (!canvas_mode ? img_rate : 1.2); //соотношение сторон канваса в гориз. или вертик. режимах
     container.style.height = container.offsetWidth / rate + "px";
     canvas.width = img_height * rate;  //горизонтальное разрешение канваса (это также ширина кадра)
     window.setTimeout(() => { Moving(frame_current) }, 500); //при поворотах мобилы resize() срабатывает дважды
@@ -101,26 +99,30 @@ btn_back.addEventListener("click", () => {
 /*************************** АНИМАЦИЯ ********************************/
 function Moving(first, last) { //first - первый кадр, last - последений кадр
     if (started) return; //блокирование повторного запуска анимации
-    started = true;
+    else started = true;
     let time_start = performance.now(); //время старта отрисовки кадра
-    let error_timer = 0; //защита от бесконечного цикла
+    let error_timer = 0; //защита от бесконечного цикла попытки скачать несуществующий файл изображения
     if (!last) last = first; //если undefined - отобразить только один first кадр
-    let direction = (first < last ? +1 : -1); //направление анимации
+    let direction = (first <= last ? +1 : -1); //направление анимации
     BtnOpasity(0.3); //притушить кнопки
+
+    requestAnimationFrame(animate);
     function animate(time) {
         if (time - time_start > imgnum[frame_current].delay) {
             time_start = time;
             let S = house.src[frame_current];
             let D = doors.src[frame_current];
             if (S && D) { //если оба слайда существюет в массиве - то отрисовываем его
-                let sx = (canvas_mode ? 0 : frame_sx); //смещение кадра (или фона) в вертик. режиме
-                if (canvas.width > 900) {
+                let sx; //смещение кадра (или фона) в вертик. режиме
+                if (canvas_mode) {
+                    sx = canvas.height * 0.25; //смещение кадра (или фона) в вертик. режиме
                     context.drawImage(S, sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
                     context.drawImage(D, sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
                 } else { //вместо canvas использовать style.background (для ускорения мобильного режима)
+                    sx = container.height * 0.05; //смещение кадра (или фона) в вертик. режиме
                     container.style.background = "url(" + D.src + ") left top / cover no-repeat ";
                     container.style.background += ", url(" + S.src + ") left top / cover no-repeat ";
-                    container.style.backgroundPosition = (canvas_mode ? 0 : -sx) + "px";
+                    container.style.backgroundPosition = -sx + "px";
                 }
                 label("" + (canvas_mode ? "bgr" : "cnv") + " " + frame_current + "/" + imgnum[frame_current].image + ".jpg " + imgnum[frame_current].delay + "ms"); //DEBUG
                 frame_current += direction; //примечание: в конце номер будет на 1 отличаться от текущего положения
@@ -141,7 +143,6 @@ function Moving(first, last) { //first - первый кадр, last - посл�
             StopMoving();
         }
     };
-    requestAnimationFrame(animate);
 }
 
 function StopMoving() {

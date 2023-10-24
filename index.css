@@ -1,0 +1,156 @@
+@font-face {
+	font-family: 'HeydingsControlsRegular';
+	src: url('fonts/heydings_controls-webfont.eot');
+	src: url('fonts/heydings_controls-webfont.eot?#iefix') format('embedded-opentype'),
+		url('fonts/heydings_controls-webfont.woff') format('woff'),
+		url('fonts/heydings_controls-webfont.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+}
+
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	font-family: helvetica, sans-serif;
+	font-size: 16px;
+}
+
+html,
+body {
+	width: 100%;
+}
+
+h1 {
+	text-align: center;
+}
+
+p {
+	font-size: 1rem;
+}
+
+
+/**************** section styles *******************/
+.container {
+	position: relative;
+	width: 100%;
+	margin-top: 10px;
+	padding: 0px;
+	background: url(images/bg.jpg);
+	background-size: cover;
+	background-repeat: no-repeat;
+	border: 1px solid rgb(51, 0, 2);
+}
+
+canvas {
+	opacity: 1.0;
+	width: 100%;
+	height: 100%;
+}
+
+/*************** controls *********************************/
+.controls {
+	position: absolute;
+	bottom: 4px;
+	left: 4px;
+	display: flex;
+	width: 240px;
+	border: 1px solid black;
+	transition: 1s all;
+	opacity: 0.5;
+}
+
+.controls button {
+	flex: 1;
+	position: relative;
+	width: 50%;
+	height: 50px;
+	border: none;
+	cursor: pointer;
+}
+
+.controls button:last-child {
+	border-left: 1px solid black;
+}
+
+.controls button::before {
+	font-family: HeydingsControlsRegular;
+	font-size: 30px;
+	content: attr(data-icon);
+	color: rgb(84, 86, 148);
+	text-shadow: 1px 1px 0px black;
+}
+
+.controls button:hover {
+	box-shadow: inset 0px 0px 4px black;
+}
+
+.controls button:active {
+	box-shadow: inset 0px 0px 16px black;
+}
+
+/****************** метка кадра ***********************************/
+.label {
+	position: absolute;
+	top: 5px;
+	left: 5px;
+	font-size: 3vh;
+	border: none;
+	color: black;
+	text-shadow: 0px 0px 4px white;
+}
+
+/****************** лог загрузки **********************************/
+div.log {
+	position: absolute;
+	top: 2px;
+	right: 2px;
+	width: 250px;
+	height: calc(100% - 4px);
+	overflow: auto;
+	padding: 2px;
+	background-color: rgb(229, 244, 245);
+	font-size: 0.7rem;
+	color: black;
+	text-shadow: 0px 0px 4px white;
+	opacity: 0.5;
+}
+
+@media screen and (orientation: portrait) {
+	.controls {
+		position: absolute;
+		top: auto;
+		left: 0px;
+		display: flex;
+		align-content: space-between;
+		bottom: 0px;
+		width: 100%;
+		height: 100%;
+		border: none;
+		opacity: 1.0;
+	}
+
+	.controls button {
+		flex: 1;
+		position: relative;
+		width: 20%;
+		height: 100%;
+
+		background: none;
+		cursor: pointer;
+	}
+
+	.controls button:last-child {
+		border-left: none;
+	}
+
+
+	div.log {
+		position: static;
+		width: 100%;
+		height: 200px;
+		border: 1px solid black;
+		opacity: 1.0;
+	}
+}

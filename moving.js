@@ -14,9 +14,10 @@
  т.е. концевые мотания при поворотаз вправо/влево это кадры 1-15 и 121-135
  p.s. Правильнее заранее записать кадры мотания с 1 го по 120(135) с центральным мотанием в середине
  *********************************************************************************/
-var img_width = 1920;
-var img_height = 616;
-var img_rate = img_width / img_height;
+const img_width = 1920;
+const img_height = 616;
+const img_rate = img_width / img_height;
+const img_total = 120//количество изображений в каталоге
 
 const btn_forw = document.querySelector(".forward"); //кнопка - вперёд
 const btn_back = document.querySelector(".backward"); //кнопка - назад
@@ -25,16 +26,8 @@ const povorot_delay = 50; //задержка кадров поворота
 const motanie_frames = 15; //количество кадров мотания
 const povorot_frames = 15; //количество кадров поворота
 const n_pm = povorot_frames + motanie_frames;
-const frame_total = 120 + motanie_frames; //количество кадров в каталоге (ещё одно мотание в конце)
 
-var imgnum = []; //массив соответствия номера кадра и номера изображения + вставка задаржки кадров
-for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, так как в анимации может выскочить undefined
-    let center = (frame_total - motanie_frames) / 2; //TODO важно правильно рассчитать центровой кадр
-    let img = (frm > center ? frm - center : frm + center);
-    let chet = ~~(~~(frm / 15) % 2); // ~~ целая часть  % остаток от деления
-    let del = (chet ? povorot_delay : motanie_delay); //задержка кадра в зависимости от номера кадра
-    imgnum[frm] = { image: img, delay: del }; //каждому кадру соответствует номер изображения и задержка анимации
-}
+var frame_total = img_total + motanie_frames; //общее количество кадров + ещё одно мотание (15 кадров) в конце
 var frame_start = 61; //начальный кадр мотания
 var frame_end = 75;   //начальный кадр мотания
 var frame_current = frame_start + Math.round(motanie_frames / 2); //текущий кадр анимации (при запуске - центр)
@@ -42,6 +35,15 @@ var frame_sx = 0.25; //горизонтальное смещение кадра 
 var animationID; // requestID анимации, для остановки
 var started = false; //флаг, true - анимация происходит в настоящий момент
 
+var imgnum = []; //массив соответствия номера кадра и номера изображения + вставка задаржки кадров
+//TODO правильнее сделать массив img[img_total] и его свзяать с кадрами
+for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, так как в анимации может выскочить undefined
+    let center = (frame_total - motanie_frames) / 2; //TODO важно правильно рассчитать центровой кадр
+    let img = (frm > center ? frm - center : frm + center);
+    let chet = ~~(~~(frm / 15) % 2); // ~~ целая часть  % остаток от деления
+    let del = (chet ? povorot_delay : motanie_delay); //задержка кадра в зависимости от номера кадра
+    imgnum[frm] = { image: img, delay: del }; //каждому кадру соответствует номер изображения и задержка анимации
+}
 /**************** Объекты изображений домика и дверей *****************/
 // src- массив изображений, fld- каталог, sub- подкаталог, ext- расширение файла изображения 
 var house = { src: [], fld: "background", sub: "_1", ext: ".jpg" }; //объект домик (background)

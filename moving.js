@@ -68,8 +68,8 @@ window.addEventListener("load", () => {
 // resize window
 window.addEventListener("resize", () => { canvasResize() });
 function canvasResize() {
-    canvas_mode = (innerWidth < innerHeight)  //горизонтальная ориентация
-    let rate = (!canvas_mode ? img_rate : 1.2); //соотношение сторон канваса в гориз. или вертик. режимах
+    canvas_mode = (innerWidth > innerHeight)  //горизонтальная ориентация
+    let rate = (canvas_mode ? img_rate : 1.2); //соотношение сторон канваса в гориз. или вертик. режимах
     container.style.height = container.offsetWidth / rate + "px";
     canvas.width = img_height * rate;  //горизонтальное разрешение канваса (это также ширина кадра)
     window.setTimeout(() => { Moving(frame_current) }, 500); //при поворотах мобилы resize() срабатывает дважды
@@ -115,6 +115,7 @@ function Moving(first, last) { //first - первый кадр, last - посл�
             let S = house.src[frame_current];
             let D = doors.src[frame_current];
             if (S && D) { //если оба слайда существюет в массиве - то отрисовываем его
+                label("" + (canvas_mode ? "cnv" : "bgr") + " " + frame_current + "/" + imgnum[frame_current].image + ".jpg " + imgnum[frame_current].delay + "ms"); //DEBUG
                 let sx; //смещение кадра (или фона) в вертик. режиме
                 if (canvas_mode) {
                     sx = canvas.height * 0.25; //смещение кадра (или фона) в вертик. режиме
@@ -126,7 +127,6 @@ function Moving(first, last) { //first - первый кадр, last - посл�
                     container.style.background += ", url(" + S.src + ") left top / cover no-repeat ";
                     container.style.backgroundPosition = -sx + "px";
                 }
-                label("" + (canvas_mode ? "bgr" : "cnv") + " " + frame_current + "/" + imgnum[frame_current].image + ".jpg " + imgnum[frame_current].delay + "ms"); //DEBUG
                 frame_current += direction; //примечание: в конце номер будет на 1 отличаться от текущего положения
             } else {
                 //console.log("waiting: no data yet to draw frame: " + frame_current); //ждём когда загрузится нужный кадр (если ещё не загрузился)

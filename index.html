@@ -12,32 +12,35 @@
 </head>
 
 <body>
-  <h1>testing canvas animation</h1>
-
-  <div class="container">
-    <canvas>
-      <!-- canvas -->
-    </canvas>
-    <div class="controls">
-      <button class="backward" data-icon="B"></button>
-      <button class="forward" data-icon="F"></button>
+  <header>
+    <h1>testing canvas animation</h1>
+  </header>
+  <main>
+    <div class="container">
+      <canvas>
+        <!-- canvas -->
+      </canvas>
+      <div class="controls">
+        <button class="backward" data-icon="B"></button>
+        <button class="forward" data-icon="F"></button>
+      </div>
+      <div class="label">
+        frm(img)ms <!-- frame number container -->
+      </div>
     </div>
-    <div class="label">
-      frm(img)ms <!-- frame number container -->
+
+    <div class="log">
+      <!-- log container -->
     </div>
-  </div>
 
-  <div class="log">
-    <!-- log container -->
-  </div>
-
-</body>
-<footer>
-  <!--
+  </main>
+  <footer>
+    <!--
       Отладка: поворот, ресайц, мобильн версия<br>
       Готово : анимация поворотов (canvas или backround(url) + requestAnimationFrame)<br>
       Готово : асинхронная загрузка изображений (fetch).
     -->
-</footer>
+  </footer>
+</body>
 
 </html>

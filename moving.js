@@ -17,31 +17,34 @@
 const img_width = 1920;
 const img_height = 616;
 const img_rate = img_width / img_height;
-const img_total = 120//количество изображений в каталоге
+const img_total = 120 //количество изображений в каталоге
+
+const delay_povorot = 50; //задержка кадров поворота (ms) ps. при fps = 60 минимально выходит 16.67 ms
+const delay_motanie = 30; //задержка кадров мотания (ms)
+const delay_motanie_fast = 1; //задержка кадров мотания при поворотах (ms)
+const frames_motanie = 15; //количество кадров мотания
+const frames_povorot = 15; //количество кадров поворота
+const n_pm = frames_povorot + frames_motanie;
 
 const btn_forw = document.querySelector(".forward"); //кнопка - вперёд
 const btn_back = document.querySelector(".backward"); //кнопка - назад
-const motanie_delay = 1; //задержка кадров мотания (при fps = 60 минимально выходит 16.67 ms)
-const povorot_delay = 50; //задержка кадров поворота
-const motanie_frames = 15; //количество кадров мотания
-const povorot_frames = 15; //количество кадров поворота
-const n_pm = povorot_frames + motanie_frames;
 
-var frame_total = img_total + motanie_frames; //общее количество кадров + ещё одно мотание (15 кадров) в конце
+var frame_total = img_total + frames_motanie; //общее количество кадров + ещё одно мотание (15 кадров) в конце
 var frame_start = 61; //начальный кадр мотания
 var frame_end = 75;   //начальный кадр мотания
-var frame_current = frame_start + Math.round(motanie_frames / 2); //текущий кадр анимации (при запуске - центр)
+var frame_current = frame_start + Math.round(frames_motanie / 2); //текущий кадр анимации (при запуске - центр)
 var frame_sx = 0.25; //горизонтальное смещение кадра в вертикальном режиме (мобила) - привязать к высоте канваса
 var animationID; // requestID анимации, для остановки
 var started = false; //флаг, true - анимация происходит в настоящий момент
 
 var imgnum = []; //массив соответствия номера кадра и номера изображения + вставка задаржки кадров
-//TODO правильнее сделать массив img[img_total] и его свзяать с кадрами
+//TODO правильнее сделать массив img[img_total], его загружать и его связать с кадрами
+//или решить вопрос с переходом через ноль в функции Moving()
 for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, так как в анимации может выскочить undefined
-    let center = (frame_total - motanie_frames) / 2; //TODO важно правильно рассчитать центровой кадр
+    let center = (frame_total - frames_motanie) / 2; //TODO важно правильно рассчитать центровой кадр
     let img = (frm > center ? frm - center : frm + center);
     let chet = ~~(~~(frm / 15) % 2); // ~~ целая часть  % остаток от деления
-    let del = (chet ? povorot_delay : motanie_delay); //задержка кадра в зависимости от номера кадра
+    let del = (chet ? delay_povorot : delay_motanie_fast); //задержка кадра в зависимости от номера кадра
     imgnum[frm] = { image: img, delay: del }; //каждому кадру соответствует номер изображения и задержка анимации
 }
 /**************** Объекты изображений домика и дверей *****************/
@@ -61,8 +64,8 @@ var canvas_mode = true;  // true - горизонтальный режим (canv
 window.addEventListener("load", () => {
     canvasResize();  //там же есть первый Moving(frame_current); //отображение центрального кадра (загрузка запустится при анимации)
     loadingAll(frame_start, frame_end); //предзагрузка первых кадров мотания
-    loadingAll(frame_end + 1, frame_end + povorot_frames); //предзагрузка кадров поворота вправо
-    loadingAll(frame_start - povorot_frames, frame_start - 1); //предзагрузка кадров поворота влево
+    loadingAll(frame_end + 1, frame_end + frames_povorot); //предзагрузка кадров поворота вправо
+    loadingAll(frame_start - frames_povorot, frame_start - 1); //предзагрузка кадров поворота влево
 });
 
 // resize window
@@ -83,16 +86,16 @@ container.addEventListener("mousemove", (e) => {
     if (started) return; //если в процессе поворота то не реагировать
     let dir = mpos.x - mpos_last.x;
     if (dir > 0)
-        Moving(frame_start, frame_end);
+        Moving(frame_start, frame_end, delay_motanie);
     else
-        Moving(frame_end, frame_start);
+        Moving(frame_end, frame_start, delay_motanie);
     mpos_last = mpos;
 });
 
 // поворот вперёд 
 btn_forw.addEventListener("click", () => {
     StopMoving(); //остановить мотание (иначе будет накладка анимаций)
-    Moving(frame_current, frame_end + povorot_frames + 1); //анимация мотания до конца + поворота
+    Moving(frame_current, frame_end + frames_povorot + 1); //анимация мотания до конца + поворота
     if (frame_end < frame_total) {
         frame_start += n_pm; //старт следующего мотания
         frame_end += n_pm; //конец следующего мотания
@@ -103,7 +106,7 @@ btn_forw.addEventListener("click", () => {
 // поворот назад 
 btn_back.addEventListener("click", () => {
     StopMoving(); //остановить мотание (иначе будет накладка анимаций)
-    Moving(frame_current, frame_start - povorot_frames - 1);
+    Moving(frame_current, frame_start - frames_povorot - 1);
     if (1 < frame_start) {
         frame_start -= n_pm; //старт следующего мотания
         frame_end -= n_pm; //конец следующего мотания
@@ -113,7 +116,7 @@ btn_back.addEventListener("click", () => {
 
 
 /*************************** АНИМАЦИЯ ********************************/
-function Moving(first, last) { //first - первый кадр, last - последений кадр
+function Moving(first, last, delay) { //first - первый кадр, last - последений кадр
     if (started) return; //блокирование повторного запуска анимации
     else started = true;
     let time_start = performance.now(); //время старта отрисовки кадра
@@ -124,12 +127,13 @@ function Moving(first, last) { //first - первый кадр, last - посл�
 
     requestAnimationFrame(animate);
     function animate(time) {
-        if (time - time_start > imgnum[frame_current].delay) {
+        let frame_delay = (delay ? delay_motanie : imgnum[frame_current].delay);
+        if (time - time_start > frame_delay) {
             time_start = time;
             let S = house.src[frame_current];
             let D = doors.src[frame_current];
             if (S && D) { //если оба слайда существюет в массиве - то отрисовываем его
-                label("" + (canvas_mode ? "cnv" : "bgr") + " " + frame_current + "/" + imgnum[frame_current].image + ".jpg " + imgnum[frame_current].delay + "ms"); //DEBUG
+                label("" + (canvas_mode ? "cnv" : "bgr") + " " + frame_current + "/" + imgnum[frame_current].image + ".jpg " + frame_delay + "ms"); //DEBUG
                 let sx; //смещение кадра/фона в вертик. режиме
                 if (canvas_mode) {
                     //sx = canvas.height * 0.25; //смещение кадра в вертик. режиме
@@ -169,6 +173,7 @@ function StopMoving() {
 }
 
 function BtnOpasity(opacity) { //засветить-погасить кнопки во время анимации ?
+    //временно убрал - раздражает блыманье при мотании
     //btn_back.style.opacity = opacity;
     //btn_forw.style.opacity = opacity;
 }

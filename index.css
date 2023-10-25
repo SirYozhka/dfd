@@ -78,7 +78,7 @@ canvas {
 	font-family: HeydingsControlsRegular;
 	font-size: 30px;
 	content: attr(data-icon);
-	color: rgb(84, 86, 148);
+	color: rgb(83, 87, 218);
 	text-shadow: 1px 1px 0px black;
 }
 

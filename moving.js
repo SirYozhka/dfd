@@ -116,13 +116,14 @@ function Moving(first, last) { //first - первый кадр, last - посл�
             let D = doors.src[frame_current];
             if (S && D) { //если оба слайда существюет в массиве - то отрисовываем его
                 label("" + (canvas_mode ? "cnv" : "bgr") + " " + frame_current + "/" + imgnum[frame_current].image + ".jpg " + imgnum[frame_current].delay + "ms"); //DEBUG
-                let sx; //смещение кадра (или фона) в вертик. режиме
+                let sx; //смещение кадра/фона в вертик. режиме
                 if (canvas_mode) {
-                    sx = canvas.height * 0.25; //смещение кадра (или фона) в вертик. режиме
+                    //sx = canvas.height * 0.25; //смещение кадра в вертик. режиме
+                    sx = 0;
                     context.drawImage(S, sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
                     context.drawImage(D, sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
                 } else { //вместо canvas использовать style.background (для ускорения мобильного режима)
-                    sx = container.height * 0.05; //смещение кадра (или фона) в вертик. режиме
+                    sx = container.clientHeight * 0.25; //смещение фона в вертик. режиме
                     container.style.background = "url(" + D.src + ") left top / cover no-repeat ";
                     container.style.background += ", url(" + S.src + ") left top / cover no-repeat ";
                     container.style.backgroundPosition = -sx + "px";

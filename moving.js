@@ -74,6 +74,7 @@ function canvasResize() {
     canvas_mode = (innerWidth > innerHeight)  //горизонтальная ориентация
     let rate = (canvas_mode ? img_rate : 1.2); //соотношение сторон канваса в гориз. или вертик. режимах
     container.style.height = container.offsetWidth / rate + "px";
+    if (canvas_mode) container.style.background = "url(images/bg.jpg) cover no-repeat ";
     canvas.width = img_height * rate;  //горизонтальное разрешение канваса (это также ширина кадра)
     window.setTimeout(() => { Moving(frame_current) }, 500); //при поворотах мобилы resize() срабатывает дважды
 }

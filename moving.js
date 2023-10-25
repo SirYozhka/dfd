@@ -75,6 +75,20 @@ function canvasResize() {
     window.setTimeout(() => { Moving(frame_current) }, 500); //при поворотах мобилы resize() срабатывает дважды
 }
 
+//мотание !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+var mpos_last; //предыдущее положение курсора мышки
+container.addEventListener("mousemove", (e) => {
+    let mpos = mouseXY(e); //получить текущее положение мышки внутри container
+    if (!mpos_last) { mpos_last = mpos; return; } //инициализация начального положения
+    if (started) return; //если в процессе поворота то не реагировать
+    let dir = mpos.x - mpos_last.x;
+    if (dir > 0)
+        Moving(frame_start, frame_end);
+    else
+        Moving(frame_end, frame_start);
+    mpos_last = mpos;
+});
+
 // поворот вперёд 
 btn_forw.addEventListener("click", () => {
     StopMoving(); //остановить мотание (иначе будет накладка анимаций)
@@ -154,9 +168,9 @@ function StopMoving() {
     BtnOpasity(1.0); //засветить кнопки
 }
 
-function BtnOpasity(opacity) { //засветить-погасить кнопки
-    btn_back.style.opacity = opacity;
-    btn_forw.style.opacity = opacity;
+function BtnOpasity(opacity) { //засветить-погасить кнопки во время анимации ?
+    //btn_back.style.opacity = opacity;
+    //btn_forw.style.opacity = opacity;
 }
 
 /*********************** Загрузка кадров ****************************/
@@ -165,7 +179,6 @@ function loadingAll(start, end) { //start, end - номера первого и 
     loadingImages(house, start, end);   //загрузка кадров домика
     loadingImages(doors, start, end);   //загрузка кадров двери
 }
-
 function loadingImages(obj, start, end) { //obj = текущий объект - house или doors
     if (end > frame_total) end = frame_total; //foolproof ограничить верхний предел
     if (start < 0) start = 1; //foolproof ограничить нижний предел
@@ -198,6 +211,13 @@ function loadingImages(obj, start, end) { //obj = текущий объект - 
 
 
 /********************* СЕРВИСНЫЕ функции *****************************/
+function mouseXY(mouse_event) {
+    let posx = mouse_event.clientX;
+    let posy = mouse_event.clientY;
+    return { x: posx, y: posy }
+}
+
+/******************** DEBUG функции ***********************************/
 function label(message) { //DEBUG отразить номер кадра, номер изображения, задержка кадра анимации
     document.querySelector(".label").textContent = message;
 }

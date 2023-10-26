@@ -128,30 +128,9 @@ svg:active polyline {
 /*********************************************************/
 @media screen and (orientation: portrait) {
 	.controls {
-		position: absolute;
-		top: auto;
-		left: 0px;
-		display: flex;
-		align-content: space-between;
-		bottom: 0px;
-		width: 100%;
-		height: 100%;
-		border: none;
-		opacity: 1.0;
+		visibility: hidden;
 	}
 
-	.controls button {
-		flex: 1;
-		position: relative;
-		width: 20%;
-		height: 100%;
-		background: none;
-		cursor: pointer;
-	}
-
-	.controls button:last-child {
-		border-left: none;
-	}
 }
 
 /****************** метка кадра ***********************************/

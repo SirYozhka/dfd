@@ -1,19 +1,9 @@
-"use strict";
+"use strict"; //строгий режим
 
 //TODO добавить пиксельный поиск двери - для клика
 //надо только для центральных кадров ?
 //можно просто обозначить прямоугольник примерно в районе двери
 
-
-/*********************************************************************************
- ВАРИАНТ РЕШЕНИЯ без необходимости прехода через нулевой кадр при поворотах
- проще в обработке кадров, но если не предполагается полное вращение по кругу
- при загрузке изображений сдвигаем все кадры на центр, т.е. первое мотание кадры 60-75 (это изображения 1-15)
- добавляем в конце 121-135 кадры мотания из начала (изображения 1.jpg - 15.jpg)
- при повороте влево концевые кадры мотания 1(61/jpg) - 15(75.jpg)
- при повороте вправо концевые кадры мотания 121(61.jpg) - 135(75.jpg)
- p.s. как вариант можно заранее сразу записывать кадры мотания с 1 го по 120(135) с центральным мотанием в середине
- *********************************************************************************/
 const img_width = 1920;
 const img_height = 616;
 const img_rate = img_width / img_height;
@@ -26,20 +16,21 @@ const frames_motanie = 15; //количество кадров мотания
 const frames_povorot = 15; //количество кадров поворота
 const n_pm = frames_povorot + frames_motanie;
 
-const btn_forw = document.querySelector(".forward"); //кнопка - вперёд
-const btn_back = document.querySelector(".backward"); //кнопка - назад
+const btn_forw = document.querySelector(".move_forward"); //кнопка - вперёд
+const btn_back = document.querySelector(".move_backward"); //кнопка - назад
+const btn_center = document.querySelector(".move_center"); //кнопка - центр
 
 var frame_total = img_total + frames_motanie; //общее количество кадров + ещё одно мотание (15 кадров) в конце
 var frame_start = 61; //начальный кадр мотания (изображение 61.jpg)
 var frame_end = 75;   //начальный кадр мотания (изображение 75.jpg)
-var frame_current = frame_start + Math.round(frames_motanie / 2); //текущий кадр анимации (при запуске - центр)
+var frame_center = frame_start + Math.round(frames_motanie / 2);
+var frame_current = frame_center; //текущий кадр анимации (при запуске - центр)
 var frame_sx = 0.25; //горизонтальное смещение кадра в вертикальном режиме (мобила) - привязать к высоте канваса
 var animationID; // requestID анимации, для остановки
 var started = false; //флаг, true - анимация происходит в настоящий момент
 
 var imgnum = []; //массив соответствия номера кадра и номера изображения + вставка задаржки кадров
-//TODO правильнее сделать массив img[img_total], его загружать и его связать с кадрами
-//или решить вопрос с переходом через ноль в функции Moving()
+//TODO можно попробовать решить вопрос с переходом через ноль в функции Moving()
 for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, так как в анимации может выскочить undefined
     let center = (frame_total - frames_motanie) / 2; //TODO важно правильно рассчитать центровой кадр
     let img = (frm > center ? frm - center : frm + center);
@@ -47,6 +38,7 @@ for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, 
     let del = (chet ? delay_povorot : delay_motanie_fast); //задержка кадра в зависимости от номера кадра
     imgnum[frm] = { image: img, delay: del }; //каждому кадру соответствует номер изображения и задержка анимации
 }
+
 /**************** Объекты изображений домика и дверей *****************/
 // src- массив изображений, fld- каталог, sub- подкаталог, ext- расширение файла изображения 
 var house = { src: [], fld: "background", sub: "_1", ext: ".jpg" }; //объект домик (background)
@@ -75,12 +67,12 @@ function canvasResize() {
     let rate = (canvas_mode ? img_rate : 1.2); //соотношение сторон канваса в гориз. или вертик. режимах
     container.style.height = container.offsetWidth / rate + "px";
     if (canvas_mode) container.style.background = "url('./images/bg.jpg') left top / cover no-repeat";
-    console.log("mode" + canvas_mode);
     canvas.width = img_height * rate;  //горизонтальное разрешение канваса (это также ширина кадра)
     window.setTimeout(() => { Moving(frame_current) }, 500); //при поворотах мобилы resize() срабатывает дважды
 }
 
-//мотание !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//мотание 
+//todo сделать только для мобильного режима 
 var mpos_last; //предыдущее положение курсора мышки
 container.addEventListener("mousemove", (e) => {
     if (!canvas_mode) return;
@@ -117,6 +109,12 @@ btn_back.addEventListener("click", () => {
     }
 });
 
+// центрировать
+btn_center.addEventListener("click", () => {
+    StopMoving(); //остановить мотание (иначе будет накладка анимаций)
+    Moving(frame_current, frame_center);
+});
+
 
 /*************************** АНИМАЦИЯ ********************************/
 function Moving(first, last, delay) { //first - первый кадр, last - последений кадр
@@ -136,7 +134,7 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
             let S = house.src[frame_current];
             let D = doors.src[frame_current];
             if (S && D) { //если оба слайда существюет в массиве - то отрисовываем его
-                label("" + (canvas_mode ? "cnv" : "bgr") + " " + frame_current + "/" + imgnum[frame_current].image + ".jpg " + frame_delay + "ms"); //DEBUG
+                label("mode:" + (canvas_mode ? "canvas" : "background") + " " + frame_current + "(" + imgnum[frame_current].image + ".jpg) delay:" + frame_delay + "ms"); //DEBUG
                 let sx; //смещение кадра/фона в вертик. режиме
                 if (canvas_mode) {
                     //sx = canvas.height * 0.25; //смещение кадра в вертик. режиме
@@ -208,7 +206,7 @@ function loadingImages(obj, start, end) { //obj = текущий объект - 
                 let image = new Image();
                 image.src = objectURL;
                 obj.src[frm] = image; //загрузка в массив house или doors
-                log("ready: " + fname); //DEBUG вывод лога загрузки домика
+                //console.log("ready: " + fname); //DEBUG вывод лога загрузки файлов
             })
             .catch((error) => {
                 console.log("ERROR fetch: " + error);
@@ -230,10 +228,13 @@ function label(message) { //DEBUG отразить номер кадра, ном
     document.querySelector(".label").textContent = message;
 }
 
-function log(message) { //DEBUG логирование событий и отображение в окне
-    const p_msg = document.createElement("p");
-    document.querySelector("div.log").appendChild(p_msg);
-    p_msg.textContent = message;
-}
 
-
+/*********************************************************************************
+ ВАРИАНТ РЕШЕНИЯ без необходимости перехода через нулевой кадр при поворотах
+ проще в обработке кадров, но если не предполагается полное вращение по кругу
+ при загрузке изображений сдвигаем все кадры на центр, т.е. первое мотание кадры 60-75 (это изображения 1-15)
+ добавляем в конце 121-135 кадры мотания из начала (изображения 1.jpg - 15.jpg)
+ при повороте влево концевые кадры мотания 1(61/jpg) - 15(75.jpg)
+ при повороте вправо концевые кадры мотания 121(61.jpg) - 135(75.jpg)
+ p.s. как вариант можно заранее сразу записывать кадры мотания с 1 го по 120(135) с центральным мотанием в середине
+ *********************************************************************************/

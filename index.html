@@ -12,25 +12,60 @@
 </head>
 
 <body>
-  <header>
-    <h1>testing canvas animation</h1>
-  </header>
   <main>
+
     <div class="container">
       <canvas>
         <!-- canvas -->
       </canvas>
       <div class="controls">
-        <button class="backward" data-icon="B"></button>
-        <button class="forward" data-icon="F"></button>
+
+        <div class="control_decor_house">
+          decor-house
+        </div>
+
+        <div class="control_decor_door">
+          <div class="svg_arrow">
+            <svg viewBox="0 0 24 24">
+              <polyline points="16.34 20.59 7.66 11.9 16.14 3.41" />
+            </svg>
+          </div>
+          <div class="circle_box">
+            <img src="images/fence_decor/3.png" style="width:2.0vw;">
+          </div>
+          <div class="svg_arrow">
+            <svg viewBox="0 0 24 24">
+              <polyline points="7.66 3.41 16.34 12.1 7.86 20.59" />
+            </svg>
+          </div>
+        </div>
+        <div class="control_motion_title">
+          Входная дверь № <span>????</span>
+        </div>
+
+        <div class="control_motion">
+          <div class="svg_arrow move_backward">
+            <svg viewBox="0 0 24 24">
+              <polyline points="16.34 20.59 7.66 11.9 16.14 3.41" />
+            </svg>
+          </div>
+          <div class="circle_box move_center">
+            <img src="images/oblet.png" style="width:3.3vw;">
+          </div>
+          <div class="svg_arrow move_forward">
+            <svg viewBox="0 0 24 24">
+              <polyline points="7.66 3.41 16.34 12.1 7.86 20.59" />
+            </svg>
+          </div>
+        </div>
+        <div class="control_motion_title">
+          Повернуть дом
+        </div>
+
       </div>
       <div class="label">
         frm(img)ms <!-- frame number container -->
       </div>
-    </div>
-
-    <div class="log">
-      <!-- log container -->
     </div>
 
   </main>

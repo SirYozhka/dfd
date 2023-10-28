@@ -206,7 +206,6 @@ function loadingAll(start, end) { //start, end - номера первого и 
     loadingImages(doors, start, end);   //загрузка кадров двери
 }
 function loadingImages(obj, start, end) { //obj = текущий объект - house или doors
-    return;
     if (end > frame_total) end = frame_total; //foolproof ограничить верхний предел
     if (start < 0) start = 1; //foolproof ограничить нижний предел
     for (let frm = start; frm <= end; frm++) {

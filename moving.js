@@ -9,17 +9,27 @@ const arr_houses = [
     { src: "images/fence_color/fence_color_brown.png", name: "Лиственница" }, //prefix: "_2"
     { src: "images/fence_color/fence_color_brown_black.png", name: "Палисандр" } //prefix: "_3"
 ];
-const list_houses = document.getElementsByClassName("decor_house");
-for (let i = 0; i < list_houses.length; i++) {
-    list_houses[i].style.background = "url(" + arr_houses[i].src + ") left top / cover no-repeat";
-    list_houses[i].setAttribute("data-text", arr_houses[i].name);
-    let sp = list_houses[i].getElementsByTagName("span");
-    sp[0].textContent = arr_houses[i].name;
-    list_houses[i].removeAttribute("data-selected");
+const div_cdh = document.querySelector(".control_decor_house");
+for (let i = 0; i < arr_houses.length; i++) {
+    let dh = document.createElement("div");
+    dh.classList.add('decor_house');
+    dh.style.background = "url(" + arr_houses[i].src + ") left top / cover no-repeat";
+    dh.setAttribute("data-text", arr_houses[i].name);
+    div_cdh.appendChild(dh);
+    dh.addEventListener("click", (e) => { checkHouse(i) });
 };
-list_houses[1].setAttribute("data-selected", null);
+const list_houses = document.getElementsByClassName("decor_house");
+checkHouse(s_house);
+
+function checkHouse(i) {
+    list_houses[s_house].removeAttribute("data-selected");
+    s_house = i;
+    list_houses[s_house].setAttribute("data-selected", null);
+    document.querySelector(".control_decor_title span").textContent = arr_houses[s_house].name;
+}
 
 
+/******************************************************************/
 //TODO добавить пиксельный поиск двери - для клика
 //надо только для центральных кадров ?
 //можно просто обозначить прямоугольник примерно в районе двери

@@ -14,16 +14,29 @@
 <body>
   <main>
 
-    <div class="container">
-      <canvas>
-        <!-- canvas -->
-      </canvas>
-      <div class="controls">
+    <div class="container"> <!-- фон контейнера используем для отображения сцены в вертикальном режиме -->
 
+      <canvas>
+        <!-- отображение сцены с помошью canvas в обычном режиме -->
+      </canvas>
+
+      <div class="controls"> <!-- панель управления-->
+
+        <!-- дом-->
         <div class="control_decor_house">
-          decor-house
+
+          <div class="decor_house">
+            <span></span>
+          </div>
+          <div class="decor_house">
+            <span></span>
+          </div>
+          <div class="decor_house">
+            <span></span>
+          </div>
         </div>
 
+        <!-- дверь -->
         <div class="control_decor_door">
           <div class="svg_arrow">
             <svg viewBox="0 0 24 24">
@@ -31,7 +44,7 @@
             </svg>
           </div>
           <div class="circle_box">
-            <img src="images/fence_decor/3.png" style="width:2.0vw;">
+            <img src="images/fence_decor/2.png">
           </div>
           <div class="svg_arrow">
             <svg viewBox="0 0 24 24">
@@ -40,9 +53,10 @@
           </div>
         </div>
         <div class="control_motion_title">
-          Входная дверь № <span>????</span>
+          Входная дверь № <span>???</span>
         </div>
 
+        <!-- повороты -->
         <div class="control_motion">
           <div class="svg_arrow move_backward">
             <svg viewBox="0 0 24 24">
@@ -50,7 +64,7 @@
             </svg>
           </div>
           <div class="circle_box move_center">
-            <img src="images/oblet.png" style="width:3.3vw;">
+            <img src="images/oblet.png">
           </div>
           <div class="svg_arrow move_forward">
             <svg viewBox="0 0 24 24">
@@ -64,7 +78,7 @@
 
       </div>
       <div class="label">
-        frm(img)ms <!-- frame number container -->
+        frm(img)ms <!-- DEBUG: вывод отладочной информации -->
       </div>
     </div>
 

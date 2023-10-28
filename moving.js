@@ -1,4 +1,24 @@
 "use strict"; //строгий режим
+/************* начальные настройки выбора ***********************/
+var s_house = 1;
+var s_door = 1;
+
+/*********** настройка стилей выбора дома *************************/
+const arr_houses = [
+    { src: "images/fence_color/fence_color_yellow.png", name: "Сосна" }, //prefix: "_1"
+    { src: "images/fence_color/fence_color_brown.png", name: "Лиственница" }, //prefix: "_2"
+    { src: "images/fence_color/fence_color_brown_black.png", name: "Палисандр" } //prefix: "_3"
+];
+const list_houses = document.getElementsByClassName("decor_house");
+for (let i = 0; i < list_houses.length; i++) {
+    list_houses[i].style.background = "url(" + arr_houses[i].src + ") left top / cover no-repeat";
+    list_houses[i].setAttribute("data-text", arr_houses[i].name);
+    let sp = list_houses[i].getElementsByTagName("span");
+    sp[0].textContent = arr_houses[i].name;
+    list_houses[i].removeAttribute("data-selected");
+};
+list_houses[1].setAttribute("data-selected", null);
+
 
 //TODO добавить пиксельный поиск двери - для клика
 //надо только для центральных кадров ?
@@ -186,6 +206,7 @@ function loadingAll(start, end) { //start, end - номера первого и 
     loadingImages(doors, start, end);   //загрузка кадров двери
 }
 function loadingImages(obj, start, end) { //obj = текущий объект - house или doors
+    return;
     if (end > frame_total) end = frame_total; //foolproof ограничить верхний предел
     if (start < 0) start = 1; //foolproof ограничить нижний предел
     for (let frm = start; frm <= end; frm++) {

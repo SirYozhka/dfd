@@ -1,5 +1,7 @@
 :root {
 	--ctr-color: rgba(255, 255, 255, 0.6);
+	--ctr-hover: rgba(255, 255, 155, 1.0);
+	--ctr-active: rgba(250, 255, 255, 1.0);
 }
 
 * {
@@ -49,51 +51,112 @@ canvas {
 	position: absolute;
 	top: 0px;
 	left: 1vw;
-	width: 12vw;
+	width: 10vw;
 	height: 100%;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	transition: 1s all;
 	opacity: 1.0;
 }
 
-/****************** управление декором ****************************/
-.control_decor_house {
-	outline: 1px solid red;
-	margin: 0px 10px 0px 10px;
-}
-
-/******************* повороты ***************************/
 .control_decor_house,
 .control_decor_door,
 .control_motion {
-	margin-top: 10px;
+	margin-top: 2vw;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 }
 
+/****************** управление декором (сцена-дом) /background ****************************/
+.decor_house {
+	display: flex;
+	position: relative;
+	height: 3.0vw;
+	width: 3.0vw;
+	justify-content: center;
+	align-items: center;
+	font-size: 1.5vw;
+	border: 0.2vmax solid var(--ctr-color);
+	border-radius: 50%;
+	cursor: pointer;
+}
+
+.decor_house span {
+	visibility: hidden;
+}
+
+.decor_house[data-selected] span {
+	display: inline-block;
+	position: absolute;
+	height: 1.3vw;
+	top: -1.6vw;
+	left: 1.5vw;
+	background: black;
+	padding: 0 1vw 0.5vw 2vw;
+	font-size: 0.8vw;
+	line-height: 1.2vw;
+	color: #fff;
+	border-radius: 1.5em;
+	visibility: visible;
+}
+
+.decor_house[data-selected] span::before {
+	position: absolute;
+	left: 0px;
+	bottom: -0.5vw;
+	content: "";
+	border: 0.6vw solid transparent;
+	border-left: 0.6vw solid black;
+}
+
+.decor_house[data-selected]::after {
+	position: absolute;
+	left: 0.8vw;
+	content: "\2714";
+	color: #cce217;
+}
+
+.decor_house:hover {
+	border: 0.25vmax solid var(--ctr-hover);
+}
+
+.decor_house:hover::after {
+	content: attr(data-text);
+	position: absolute;
+	left: 20%;
+	top: -20%;
+	z-index: 1;
+	font-size: 1.0vw;
+	padding: 0px;
+	color: white;
+	text-shadow: 1px 1px 7px black;
+}
+
+/******************* дверь + повороты ***************************/
 .circle_box {
-	height: 5vw;
-	width: 5vw;
+	height: 4vw;
+	width: 4vw;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	border: 0.3vmax solid var(--ctr-color);
+	border: 0.2vmax solid var(--ctr-color);
 	border-radius: 50%;
 	background-color: #444;
 	cursor: pointer;
 }
 
+.circle_box img {
+	width: 50%;
+}
+
 .svg_arrow {
 	width: 100%;
-	max-width: 2.4vmax;
-	max-height: 2.4vmax;
+	max-width: 2.0vw;
+	max-height: 2.0vw;
 	cursor: pointer;
 }
 
-/*************************************************************/
 svg {
 	fill: none;
 	stroke-width: 0.15vw;
@@ -104,11 +167,11 @@ svg {
 }
 
 svg:hover polyline {
-	stroke: yellow;
+	stroke: var(--ctr-hover);
 }
 
 svg:active polyline {
-	stroke: green;
+	stroke: var(--ctr-active);
 }
 
 .control_door_title,
@@ -124,7 +187,6 @@ svg:active polyline {
 	border-radius: 1vmax;
 }
 
-
 /*********************************************************/
 @media screen and (orientation: portrait) {
 	.controls {
@@ -133,7 +195,7 @@ svg:active polyline {
 
 }
 
-/****************** метка кадра ***********************************/
+/****************** DEBUG: метка кадра ***********************************/
 .label {
 	position: absolute;
 	top: 5px;

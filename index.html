@@ -22,15 +22,31 @@
 
       <div class="controls"> <!-- панель управления-->
 
-        <!-- дом-->
+        <!-- выбор дом/background -->
         <div class="control_decor_house">
-          <!-- все элементы добавляются через JS-->
+          <!-- элементы(кнопки) добавляются JavaScript ниже -->
         </div>
+        <script>
+          //todo можно вынести этот скрипт в файл init.js или опустить в футер 
+          const arr_houses = [
+            { src: "fence_color_yellow.png", name: "Сосна" }, //prefix: "_1"
+            { src: "fence_color_brown.png", name: "Лиственница" }, //prefix: "_2"
+            { src: "fence_color_brown_black.png", name: "Палисандр" } //prefix: "_3"
+          ];
+          for (let i = 0; i < arr_houses.length; i++) {
+            let decor_house = document.createElement("div");
+            document.querySelector(".control_decor_house").appendChild(decor_house);
+            decor_house.classList.add('decor_house');
+            decor_house.style.background = "url(images/fence_color/" + arr_houses[i].src + ") left top / cover no-repeat";
+            decor_house.setAttribute("data-text", arr_houses[i].name);
+            decor_house.addEventListener("click", () => { checkHouse(i) });
+          };
+        </script>
         <div class="control_decor_title">
           Цвет: <span>???</span>
         </div>
 
-        <!-- дверь -->
+        <!-- выбор дверь -->
         <div class="control_decor_door">
           <div class="svg_arrow">
             <svg viewBox="0 0 24 24">

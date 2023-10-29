@@ -1,33 +1,4 @@
 "use strict"; //строгий режим
-/************* начальные настройки выбора ***********************/
-var s_house = 1;
-var s_door = 1;
-
-/*********** настройка стилей выбора дома *************************/
-const arr_houses = [
-    { src: "images/fence_color/fence_color_yellow.png", name: "Сосна" }, //prefix: "_1"
-    { src: "images/fence_color/fence_color_brown.png", name: "Лиственница" }, //prefix: "_2"
-    { src: "images/fence_color/fence_color_brown_black.png", name: "Палисандр" } //prefix: "_3"
-];
-const div_cdh = document.querySelector(".control_decor_house");
-for (let i = 0; i < arr_houses.length; i++) {
-    let dh = document.createElement("div");
-    dh.classList.add('decor_house');
-    dh.style.background = "url(" + arr_houses[i].src + ") left top / cover no-repeat";
-    dh.setAttribute("data-text", arr_houses[i].name);
-    div_cdh.appendChild(dh);
-    dh.addEventListener("click", (e) => { checkHouse(i) });
-};
-const list_houses = document.getElementsByClassName("decor_house");
-checkHouse(s_house);
-
-function checkHouse(i) {
-    list_houses[s_house].removeAttribute("data-selected");
-    s_house = i;
-    list_houses[s_house].setAttribute("data-selected", null);
-    document.querySelector(".control_decor_title span").textContent = arr_houses[s_house].name;
-}
-
 
 /******************************************************************/
 //TODO добавить пиксельный поиск двери - для клика
@@ -49,10 +20,15 @@ const n_pm = frames_povorot + frames_motanie;
 const btn_forw = document.querySelector(".move_forward"); //кнопка - вперёд
 const btn_back = document.querySelector(".move_backward"); //кнопка - назад
 const btn_center = document.querySelector(".move_center"); //кнопка - центр
+const list_houses = document.getElementsByClassName("decor_house"); //кнопки выбора дома
+const container = document.querySelector(".container"); //контейнер всей сцены
+const canvas = document.querySelector("canvas");
+var context = canvas.getContext("2d");
+var canvas_mode = true;  // true - горизонтальный режим (canvas включен), false - вертикальная ориентация
 
 var frame_total = img_total + frames_motanie; //общее количество кадров + ещё одно мотание (15 кадров) в конце
 var frame_start = 61; //начальный кадр мотания (изображение 61.jpg)
-var frame_end = 75;   //начальный кадр мотания (изображение 75.jpg)
+var frame_end = 75;   //конечный кадр мотания (изображение 75.jpg)
 var frame_center = frame_start + Math.round(frames_motanie / 2);
 var frame_current = frame_center; //текущий кадр анимации (при запуске - центр)
 var frame_sx = 0.25; //горизонтальное смещение кадра в вертикальном режиме (мобила) - привязать к высоте канваса
@@ -69,40 +45,47 @@ for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, 
     imgnum[frm] = { image: img, delay: del }; //каждому кадру соответствует номер изображения и задержка анимации
 }
 
+
 /**************** Объекты изображений домика и дверей *****************/
 // src- массив изображений, fld- каталог, sub- подкаталог, ext- расширение файла изображения 
-var house = { src: [], fld: "background", sub: "_1", ext: ".jpg" }; //объект домик (background)
-var doors = { src: [], fld: "object", sub: "_2", ext: ".png" }; //объект дверь (object)
+var house = { src: [], fld: "background", sub: "1", ext: ".jpg" }; //объект домик (background)
+var doors = { src: [], fld: "object", sub: "2", ext: ".png" }; //объект дверь (object)
 
-/*********************** canvas init ***********************/
-const container = document.querySelector(".container");
-const canvas = document.querySelector("canvas");
-canvas.height = img_height; //вертикальное разрешение постоянное (горизонтальное меняется в вертикальном режиме)
-var context = canvas.getContext("2d");
-var canvas_mode = true;  // true - горизонтальный режим (canvas включен), false - вертикальная ориентация
 
 /*********************** Listeners ***********************/
+//выбор дома (цвета)
+function checkHouse(i) {
+    list_houses[house.sub - 1].removeAttribute("data-selected");
+    house.sub = (i + 1);
+    list_houses[house.sub - 1].setAttribute("data-selected", null);
+    document.querySelector(".control_decor_title span").textContent = arr_houses[house.sub - 1].name;
+    house.src = [];
+    window.setTimeout(() => { Moving(frame_current) }, 100); //при поворотах мобилы resize() срабатывает дважды
+    //TODO добавить предзагрузку
+}
+
 // запуск при загрузке 
 window.addEventListener("load", () => {
+    checkHouse(house.sub - 1);
     canvasResize();  //там же есть первый Moving(frame_current); //отображение центрального кадра (загрузка запустится при анимации)
     loadingAll(frame_start, frame_end); //предзагрузка первых кадров мотания
     loadingAll(frame_end + 1, frame_end + frames_povorot); //предзагрузка кадров поворота вправо
     loadingAll(frame_start - frames_povorot, frame_start - 1); //предзагрузка кадров поворота влево
 });
 
-// resize window
+// resize canvas
 window.addEventListener("resize", () => { canvasResize() });
 function canvasResize() {
     canvas_mode = (innerWidth > innerHeight)  //горизонтальная ориентация
     let rate = (canvas_mode ? img_rate : 1.2); //соотношение сторон канваса в гориз. или вертик. режимах
     container.style.height = container.offsetWidth / rate + "px";
     if (canvas_mode) container.style.background = "url('./images/bg.jpg') left top / cover no-repeat";
+    canvas.height = img_height; //вертикальное разрешение постоянное (горизонтальное меняется в вертикальном режиме)
     canvas.width = img_height * rate;  //горизонтальное разрешение канваса (это также ширина кадра)
     window.setTimeout(() => { Moving(frame_current) }, 500); //при поворотах мобилы resize() срабатывает дважды
 }
 
-//мотание 
-//todo сделать только для мобильного режима 
+//мотание TODO сделать только для компьютерного режима
 var mpos_last; //предыдущее положение курсора мышки
 container.addEventListener("mousemove", (e) => {
     if (!canvas_mode) return;
@@ -143,6 +126,8 @@ btn_back.addEventListener("click", () => {
 btn_center.addEventListener("click", () => {
     StopMoving(); //остановить мотание (иначе будет накладка анимаций)
     Moving(frame_current, frame_center);
+    frame_start = 61; //старт следующего мотания
+    frame_end = 75; //конец следующего мотания
 });
 
 
@@ -154,7 +139,6 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
     let error_timer = 0; //защита от бесконечного цикла попытки скачать несуществующий файл изображения
     if (!last) last = first; //если undefined - отобразить только один first кадр
     let direction = (first <= last ? +1 : -1); //направление анимации
-    BtnOpasity(0.3); //притушить кнопки
 
     requestAnimationFrame(animate);
     function animate(time) {
@@ -200,13 +184,6 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
 function StopMoving() {
     cancelAnimationFrame(animationID);
     started = false;
-    BtnOpasity(1.0); //засветить кнопки
-}
-
-function BtnOpasity(opacity) { //засветить-погасить кнопки во время анимации ?
-    //временно убрал - раздражает блыманье при мотании
-    //btn_back.style.opacity = opacity;
-    //btn_forw.style.opacity = opacity;
 }
 
 /*********************** Загрузка кадров ****************************/
@@ -221,7 +198,7 @@ function loadingImages(obj, start, end) { //obj = текущий объект - 
     for (let frm = start; frm <= end; frm++) {
         if (obj.src[frm] != undefined) continue; //если уже загружен или грузится в другом потоке
         obj.src[frm] = 0; //флаг - ставим файл в загрузку
-        let fname = "./" + obj.fld + obj.sub + "/" + imgnum[frm].image + obj.ext;
+        let fname = "./scene/" + obj.fld + "_" + obj.sub + "/" + imgnum[frm].image + obj.ext;
         fetch(fname)
             .then((response) => {
                 if (!response.ok)

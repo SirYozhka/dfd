@@ -17,10 +17,12 @@ const frames_motanie = 15; //количество кадров мотания
 const frames_povorot = 15; //количество кадров поворота
 const n_pm = frames_povorot + frames_motanie;
 
-const btn_forw = document.querySelector(".move_forward"); //кнопка - вперёд
-const btn_back = document.querySelector(".move_backward"); //кнопка - назад
-const btn_center = document.querySelector(".move_center"); //кнопка - центр
 const list_houses = document.getElementsByClassName("decor_house"); //кнопки выбора дома
+const btn_prevdoor = document.querySelector(".prev_door"); //кнопка - предыдущая дверь
+const btn_nextdoor = document.querySelector(".next_door"); //кнопка - следующая дверь
+const btn_back = document.querySelector(".move_backward"); //кнопка - поворот назад
+const btn_center = document.querySelector(".move_center"); //кнопка - на центр
+const btn_forw = document.querySelector(".move_forward"); //кнопка - поворот вперёд
 const container = document.querySelector(".container"); //контейнер всей сцены
 const canvas = document.querySelector("canvas");
 var context = canvas.getContext("2d");
@@ -35,7 +37,7 @@ var frame_sx = 0.25; //горизонтальное смещение кадра 
 var animationID; // requestID анимации, для остановки
 var started = false; //флаг, true - анимация происходит в настоящий момент
 
-var imgnum = []; //массив соответствия номера кадра и номера изображения + вставка задаржки кадров
+var imgnum = []; //массив соответствия номера кадра и номера изображения + вставка задержки кадров
 //TODO можно попробовать решить вопрос с переходом через ноль в функции Moving()
 for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, так как в анимации может выскочить undefined
     let center = (frame_total - frames_motanie) / 2; //TODO важно правильно рассчитать центровой кадр
@@ -46,13 +48,41 @@ for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, 
 }
 
 
+/************** инициализация кнопок изменения декора домика ******************/
+const arr_houses = [
+    { src: "fence_color_yellow.png", name: "Сосна" }, //prefix: "_1"
+    { src: "fence_color_brown.png", name: "Лиственница" }, //prefix: "_2"
+    { src: "fence_color_brown_black.png", name: "Палисандр" } //prefix: "_3"
+];
+for (let i = 0; i < arr_houses.length; i++) {
+    let decor_house = document.createElement("div");
+    document.querySelector(".control_decor_house").appendChild(decor_house);
+    decor_house.classList.add('decor_house');
+    decor_house.style.background = "url(images/fence_color/" + arr_houses[i].src + ") left top / cover no-repeat";
+    decor_house.setAttribute("data-text", arr_houses[i].name);
+    decor_house.addEventListener("click", () => { checkHouse(i) });
+};
+
+
 /**************** Объекты изображений домика и дверей *****************/
 // src- массив изображений, fld- каталог, sub- подкаталог, ext- расширение файла изображения 
 var house = { src: [], fld: "background", sub: "1", ext: ".jpg" }; //объект домик (background)
-var doors = { src: [], fld: "object", sub: "2", ext: ".png" }; //объект дверь (object)
+var doors = { src: [], fld: "object", sub: "1", ext: ".png" }; //объект дверь (object)
 
 
 /*********************** Listeners ***********************/
+//выбор двери
+btn_prevdoor.addEventListener("click", () => { checkDoor(-1) });
+btn_nextdoor.addEventListener("click", () => { checkDoor(+1) });
+function checkDoor(dir) {
+    doors.sub += dir;
+    if (doors.sub < 1) doors.sub = 3;
+    if (doors.sub > 3) doors.sub = 1;
+    document.querySelector(".control_door_title span").textContent = doors.sub;
+    doors.src = [];
+    window.setTimeout(() => { Moving(frame_current) }, 100);
+}
+
 //выбор дома (цвета)
 function checkHouse(i) {
     list_houses[house.sub - 1].removeAttribute("data-selected");
@@ -60,13 +90,14 @@ function checkHouse(i) {
     list_houses[house.sub - 1].setAttribute("data-selected", null);
     document.querySelector(".control_decor_title span").textContent = arr_houses[house.sub - 1].name;
     house.src = [];
-    window.setTimeout(() => { Moving(frame_current) }, 100); //при поворотах мобилы resize() срабатывает дважды
+    window.setTimeout(() => { Moving(frame_current) }, 100);
     //TODO добавить предзагрузку
 }
 
 // запуск при загрузке 
 window.addEventListener("load", () => {
     checkHouse(house.sub - 1);
+    checkDoor(doors.sub);
     canvasResize();  //там же есть первый Moving(frame_current); //отображение центрального кадра (загрузка запустится при анимации)
     loadingAll(frame_start, frame_end); //предзагрузка первых кадров мотания
     loadingAll(frame_end + 1, frame_end + frames_povorot); //предзагрузка кадров поворота вправо

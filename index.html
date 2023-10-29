@@ -24,31 +24,15 @@
 
         <!-- выбор дом/background -->
         <div class="control_decor_house">
-          <!-- элементы(кнопки) добавляются JavaScript ниже -->
+          <!-- элементы(кнопки) добавляются JavaScript функция initDivButtons() -->
         </div>
-        <script>
-          //todo можно вынести этот скрипт в файл init.js или опустить в футер 
-          const arr_houses = [
-            { src: "fence_color_yellow.png", name: "Сосна" }, //prefix: "_1"
-            { src: "fence_color_brown.png", name: "Лиственница" }, //prefix: "_2"
-            { src: "fence_color_brown_black.png", name: "Палисандр" } //prefix: "_3"
-          ];
-          for (let i = 0; i < arr_houses.length; i++) {
-            let decor_house = document.createElement("div");
-            document.querySelector(".control_decor_house").appendChild(decor_house);
-            decor_house.classList.add('decor_house');
-            decor_house.style.background = "url(images/fence_color/" + arr_houses[i].src + ") left top / cover no-repeat";
-            decor_house.setAttribute("data-text", arr_houses[i].name);
-            decor_house.addEventListener("click", () => { checkHouse(i) });
-          };
-        </script>
         <div class="control_decor_title">
           Цвет: <span>???</span>
         </div>
 
         <!-- выбор дверь -->
         <div class="control_decor_door">
-          <div class="svg_arrow">
+          <div class="svg_arrow prev_door">
             <svg viewBox="0 0 24 24">
               <polyline points="16.34 20.59 7.66 11.9 16.14 3.41" />
             </svg>
@@ -56,13 +40,13 @@
           <div class="circle_box">
             <img src="images/fence_decor/2.png">
           </div>
-          <div class="svg_arrow">
+          <div class="svg_arrow next_door">
             <svg viewBox="0 0 24 24">
               <polyline points="7.66 3.41 16.34 12.1 7.86 20.59" />
             </svg>
           </div>
         </div>
-        <div class="control_motion_title">
+        <div class="control_door_title">
           Входная дверь № <span>???</span>
         </div>
 

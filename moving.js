@@ -17,22 +17,14 @@ const frames_motanie = 15; //количество кадров мотания
 const frames_povorot = 15; //количество кадров поворота
 const n_pm = frames_povorot + frames_motanie;
 
-const btn_back = document.querySelector(".move_backward"); //кнопка - поворот назад
-const btn_center = document.querySelector(".move_center"); //кнопка - на центр
-const btn_forw = document.querySelector(".move_forward"); //кнопка - поворот вперёд
-const container = document.querySelector(".container"); //контейнер всей сцены
-const canvas = document.querySelector("canvas");
-var context = canvas.getContext("2d");
-var canvas_mode = true;  // true - горизонтальный режим (canvas включен), false - вертикальная ориентация
-
 var frame_total = img_total + frames_motanie; //общее количество кадров + ещё одно мотание (15 кадров) в конце
 var frame_start = 61; //начальный кадр мотания (изображение 61.jpg)
 var frame_end = 75;   //конечный кадр мотания (изображение 75.jpg)
 var frame_center = frame_start + Math.round(frames_motanie / 2);
 var frame_current = frame_center; //текущий кадр анимации (при запуске - центр)
-var frame_sx = 0.25; //горизонтальное смещение кадра в вертикальном режиме (мобила) - привязать к высоте канваса
 var animationID; // requestID анимации, для остановки
 var started = false; //флаг, true - анимация происходит в настоящий момент
+
 
 //TODO можно попробовать решить вопрос с переходом через ноль в функции Moving()
 var imgnum = []; //массив соответствия номера кадра и номера изображения + вставка задержки кадров
@@ -48,8 +40,13 @@ for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, 
 var house = { src: [], fld: "background", sub: "1", ext: ".jpg" }; //объект домик (background)
 var doors = { src: [], fld: "object", sub: "1", ext: ".png" }; //объект дверь (object)
 
+//настройки канваса
+const container = document.querySelector(".container"); //контейнер всей сцены
+const canvas = document.querySelector("canvas");
+var context = canvas.getContext("2d");
+var canvas_mode = true;  // true - горизонтальный режим (canvas включен), false - вертикальная ориентация
 
-/************** инициализация кнопок изменения декора домика ******************/
+//HTML инициализация кнопок изменения декора домика
 const arr_houses = [
     { src: "fence_color_yellow.png", name: "Сосна" }, //prefix: "_1"
     { src: "fence_color_brown.png", name: "Лиственница" }, //prefix: "_2"
@@ -65,8 +62,18 @@ for (let i = 0; i < arr_houses.length; i++) {
 };
 const list_houses = document.getElementsByClassName("decor_house"); //кнопки выбора дома
 
-/************* настройка слайдера изменения двери **************************/
-class Slider {
+//выбор дома (цвета)
+function checkHouse(i) {
+    list_houses[house.sub - 1].removeAttribute("data-selected");
+    house.sub = (i + 1);
+    list_houses[house.sub - 1].setAttribute("data-selected", null);
+    document.querySelector(".control_decor_title span").textContent = arr_houses[house.sub - 1].name;
+    house.src = []; //очистил массив изображений... TODO добавить предзагрузку
+    window.setTimeout(() => { Moving(frame_current) }, 100);
+}
+
+//выбор двери
+class Slider { //слайдер изменения двери 
     constructor() {
         this.sliderLine = document.querySelector('.slider-line');
         this.numb = document.querySelectorAll('.slider-item').length;
@@ -82,9 +89,6 @@ class Slider {
     }
 }
 var slider = new Slider();
-
-/*********************** Listeners ***********************/
-//выбор двери
 document.querySelector(".door_prev").addEventListener("click", () => { checkDoor(-1) });
 document.querySelectorAll('.door_next').forEach(b => b.addEventListener('click', () => { checkDoor(+1) }));
 function checkDoor(dir) {
@@ -97,18 +101,7 @@ function checkDoor(dir) {
     window.setTimeout(() => { Moving(frame_current) }, 100);
 }
 
-//выбор дома (цвета)
-function checkHouse(i) {
-    list_houses[house.sub - 1].removeAttribute("data-selected");
-    house.sub = (i + 1);
-    list_houses[house.sub - 1].setAttribute("data-selected", null);
-    document.querySelector(".control_decor_title span").textContent = arr_houses[house.sub - 1].name;
-    house.src = [];
-    window.setTimeout(() => { Moving(frame_current) }, 100);
-    //TODO добавить предзагрузку
-}
-
-// запуск при загрузке 
+// инициализация при загрузке 
 window.addEventListener("load", () => {
     checkHouse(house.sub - 1);
     checkDoor(doors.sub);
@@ -147,7 +140,7 @@ container.addEventListener("mousemove", (e) => {
 });
 
 // поворот вперёд 
-btn_forw.addEventListener("click", () => {
+document.querySelector(".move_forward").addEventListener("click", () => {
     StopMoving(); //остановить мотание (иначе будет накладка анимаций)
     Moving(frame_current, frame_end + frames_povorot + 1); //анимация мотания до конца + поворота
     if (frame_end < frame_total) {
@@ -158,7 +151,7 @@ btn_forw.addEventListener("click", () => {
 });
 
 // поворот назад 
-btn_back.addEventListener("click", () => {
+document.querySelector(".move_backward").addEventListener("click", () => {
     StopMoving(); //остановить мотание (иначе будет накладка анимаций)
     Moving(frame_current, frame_start - frames_povorot - 1);
     if (1 < frame_start) {
@@ -169,7 +162,7 @@ btn_back.addEventListener("click", () => {
 });
 
 // центрировать
-btn_center.addEventListener("click", () => {
+document.querySelector(".move_center").addEventListener("click", () => {
     StopMoving(); //остановить мотание (иначе будет накладка анимаций)
     Moving(frame_current, frame_center);
     frame_start = 61; //старт следующего мотания
@@ -186,7 +179,7 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
     if (!last) last = first; //если undefined - отобразить только один first кадр
     let direction = (first <= last ? +1 : -1); //направление анимации
 
-    requestAnimationFrame(animate);
+    animationID = requestAnimationFrame(animate);
     function animate(time) {
         let frame_delay = (delay ? delay_motanie : imgnum[frame_current].delay);
         if (time - time_start > frame_delay) {
@@ -213,7 +206,7 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
                 loadingAll(frame_current); //на всяк случай кидаем этот кадр в загрузку
                 error_timer++;
                 if (error_timer > 500) {  //если кадр таки не загрузится
-                    console.log("error animation, frame:" + frame_current + " not found!");
+                    console.log("error animation frame:" + frame_current + " not found!");
                     frame_current += direction; //пропускаем кадр
                     error_timer = 0;
                 }

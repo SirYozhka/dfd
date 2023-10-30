@@ -32,22 +32,30 @@
 
         <!-- выбор дверь -->
         <div class="control_decor_door">
-          <div class="svg_arrow prev_door">
+
+          <div class="svg_arrow door_prev">
             <svg viewBox="0 0 24 24">
               <polyline points="16.34 20.59 7.66 11.9 16.14 3.41" />
             </svg>
           </div>
-          <div class="circle_box">
-            <img src="images/fence_decor/2.png">
+
+          <div class="slider door_next">
+            <div class="slider-line">
+              <div class="slider-item"><img src="images/fence_decor/1.png"></div>
+              <div class="slider-item"><img src="images/fence_decor/2.png"></div>
+              <div class="slider-item"><img src="images/fence_decor/3.png"></div>
+            </div>
           </div>
-          <div class="svg_arrow next_door">
+
+          <div class="svg_arrow door_next">
             <svg viewBox="0 0 24 24">
               <polyline points="7.66 3.41 16.34 12.1 7.86 20.59" />
             </svg>
           </div>
+
         </div>
         <div class="control_door_title">
-          Входная дверь № <span>???</span>
+          Входная дверь: <span>???</span>
         </div>
 
         <!-- повороты -->
@@ -57,7 +65,7 @@
               <polyline points="16.34 20.59 7.66 11.9 16.14 3.41" />
             </svg>
           </div>
-          <div class="circle_box move_center">
+          <div class="move_center">
             <img src="images/oblet.png">
           </div>
           <div class="svg_arrow move_forward">

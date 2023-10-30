@@ -17,9 +17,6 @@ const frames_motanie = 15; //количество кадров мотания
 const frames_povorot = 15; //количество кадров поворота
 const n_pm = frames_povorot + frames_motanie;
 
-const list_houses = document.getElementsByClassName("decor_house"); //кнопки выбора дома
-const btn_prevdoor = document.querySelector(".prev_door"); //кнопка - предыдущая дверь
-const btn_nextdoor = document.querySelector(".next_door"); //кнопка - следующая дверь
 const btn_back = document.querySelector(".move_backward"); //кнопка - поворот назад
 const btn_center = document.querySelector(".move_center"); //кнопка - на центр
 const btn_forw = document.querySelector(".move_forward"); //кнопка - поворот вперёд
@@ -37,8 +34,8 @@ var frame_sx = 0.25; //горизонтальное смещение кадра 
 var animationID; // requestID анимации, для остановки
 var started = false; //флаг, true - анимация происходит в настоящий момент
 
-var imgnum = []; //массив соответствия номера кадра и номера изображения + вставка задержки кадров
 //TODO можно попробовать решить вопрос с переходом через ноль в функции Moving()
+var imgnum = []; //массив соответствия номера кадра и номера изображения + вставка задержки кадров
 for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, так как в анимации может выскочить undefined
     let center = (frame_total - frames_motanie) / 2; //TODO важно правильно рассчитать центровой кадр
     let img = (frm > center ? frm - center : frm + center);
@@ -46,6 +43,10 @@ for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, 
     let del = (chet ? delay_povorot : delay_motanie_fast); //задержка кадра в зависимости от номера кадра
     imgnum[frm] = { image: img, delay: del }; //каждому кадру соответствует номер изображения и задержка анимации
 }
+
+//Объекты домика и дверей: src - url изображений, fld- каталог, sub- подкаталог, ext- расширение файла 
+var house = { src: [], fld: "background", sub: "1", ext: ".jpg" }; //объект домик (background)
+var doors = { src: [], fld: "object", sub: "1", ext: ".png" }; //объект дверь (object)
 
 
 /************** инициализация кнопок изменения декора домика ******************/
@@ -62,23 +63,36 @@ for (let i = 0; i < arr_houses.length; i++) {
     decor_house.setAttribute("data-text", arr_houses[i].name);
     decor_house.addEventListener("click", () => { checkHouse(i) });
 };
+const list_houses = document.getElementsByClassName("decor_house"); //кнопки выбора дома
 
-
-/**************** Объекты изображений домика и дверей *****************/
-// src- массив изображений, fld- каталог, sub- подкаталог, ext- расширение файла изображения 
-var house = { src: [], fld: "background", sub: "1", ext: ".jpg" }; //объект домик (background)
-var doors = { src: [], fld: "object", sub: "1", ext: ".png" }; //объект дверь (object)
-
+/************* настройка слайдера изменения двери **************************/
+class Slider {
+    constructor() {
+        this.sliderLine = document.querySelector('.slider-line');
+        this.numb = document.querySelectorAll('.slider-item').length;
+        this.width;
+    }
+    init() {
+        this.width = document.querySelector('.slider').clientWidth;
+        this.sliderLine.style.width = this.width * this.numb + 'px';
+        this.roll();
+    }
+    roll(num) {
+        this.sliderLine.style.transform = 'translate(-' + num * this.width + 'px)';
+    }
+}
+var slider = new Slider();
 
 /*********************** Listeners ***********************/
 //выбор двери
-btn_prevdoor.addEventListener("click", () => { checkDoor(-1) });
-btn_nextdoor.addEventListener("click", () => { checkDoor(+1) });
+document.querySelector(".door_prev").addEventListener("click", () => { checkDoor(-1) });
+document.querySelectorAll('.door_next').forEach(b => b.addEventListener('click', () => { checkDoor(+1) }));
 function checkDoor(dir) {
     doors.sub += dir;
     if (doors.sub < 1) doors.sub = 3;
     if (doors.sub > 3) doors.sub = 1;
     document.querySelector(".control_door_title span").textContent = doors.sub;
+    slider.roll(doors.sub - 1);
     doors.src = [];
     window.setTimeout(() => { Moving(frame_current) }, 100);
 }
@@ -107,6 +121,7 @@ window.addEventListener("load", () => {
 // resize canvas
 window.addEventListener("resize", () => { canvasResize() });
 function canvasResize() {
+    slider.init();
     canvas_mode = (innerWidth > innerHeight)  //горизонтальная ориентация
     let rate = (canvas_mode ? img_rate : 1.2); //соотношение сторон канваса в гориз. или вертик. режимах
     container.style.height = container.offsetWidth / rate + "px";
@@ -116,7 +131,7 @@ function canvasResize() {
     window.setTimeout(() => { Moving(frame_current) }, 500); //при поворотах мобилы resize() срабатывает дважды
 }
 
-//мотание TODO сделать только для компьютерного режима
+//мотание TODO только для компьютерного режима (mousemove в мобильном не работает)
 var mpos_last; //предыдущее положение курсора мышки
 container.addEventListener("mousemove", (e) => {
     if (!canvas_mode) return;
@@ -179,7 +194,7 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
             let S = house.src[frame_current];
             let D = doors.src[frame_current];
             if (S && D) { //если оба слайда существюет в массиве - то отрисовываем его
-                label("mode:" + (canvas_mode ? "canvas" : "background") + " " + frame_current + "(" + imgnum[frame_current].image + ".jpg) delay:" + frame_delay + "ms"); //DEBUG
+                label((canvas_mode ? "canvas" : "background") + " " + imgnum[frame_current].image + ".jpg " + frame_delay + "ms"); //DEBUG
                 let sx; //смещение кадра/фона в вертик. режиме
                 if (canvas_mode) {
                     //sx = canvas.height * 0.25; //смещение кадра в вертик. режиме
@@ -187,7 +202,7 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
                     context.drawImage(S, sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
                     context.drawImage(D, sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
                 } else { //вместо canvas использовать style.background (для ускорения мобильного режима)
-                    sx = container.clientHeight * 0.25; //смещение фона в вертик. режиме
+                    sx = container.clientHeight * 0.25; //смещение кадра(фона) в вертик. режиме
                     container.style.background = "url(" + D.src + ") left top / cover no-repeat ";
                     container.style.background += ", url(" + S.src + ") left top / cover no-repeat ";
                     container.style.backgroundPosition = -sx + "px";
@@ -262,14 +277,14 @@ function mouseXY(mouse_event) {
 }
 
 /******************** DEBUG функции ***********************************/
-function label(message) { //DEBUG отразить номер кадра, номер изображения, задержка кадра анимации
+function label(message) { //DEBUG: режим, номер кадра, номер изображения, задержка кадра анимации
     document.querySelector(".label").textContent = message;
 }
 
 
 /*********************************************************************************
- ВАРИАНТ РЕШЕНИЯ без необходимости перехода через нулевой кадр при поворотах
- проще в обработке кадров, но если не предполагается полное вращение по кругу
+ ВАРИАНТ РЕШЕНИЯ без необходимости перехода через нулевой кадр при поворотах (проще в обработке кадров), 
+ NOTE!!! только если не предполагается полное вращение по кругу
  при загрузке изображений сдвигаем все кадры на центр, т.е. первое мотание кадры 60-75 (это изображения 1-15)
  добавляем в конце 121-135 кадры мотания из начала (изображения 1.jpg - 15.jpg)
  при повороте влево концевые кадры мотания 1(61/jpg) - 15(75.jpg)

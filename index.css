@@ -42,7 +42,7 @@ main {
 }
 
 canvas {
-	opacity: 0.8;
+	opacity: 1.0;
 	width: 100%;
 	height: 100%;
 }
@@ -69,7 +69,7 @@ canvas {
 	align-items: center;
 }
 
-/****************** управление декором (сцена-дом) /background ****************************/
+/****************** сцена-дом (background) ****************************/
 .decor_house {
 	display: flex;
 	position: relative;
@@ -79,11 +79,12 @@ canvas {
 	align-items: center;
 	font-size: 2.2vw;
 	font-weight: 100;
-	color: var(--ctr-color);
+	color: var(--ctr-active);
 	border: 0.2vmax solid var(--ctr-color);
 	border-radius: 50%;
 	cursor: pointer;
 	box-shadow: var(--schadow);
+	text-shadow: var(--schadow);
 }
 
 .decor_house[data-selected]::before {
@@ -111,8 +112,39 @@ canvas {
 	border: 0.2vmax solid var(--ctr-active);
 }
 
-/******************* дверь + повороты ***************************/
-.circle_box {
+/******************* дверь ***************************/
+.slider {
+	height: 4vw;
+	width: 4vw;
+	display: flex;
+	align-items: center;
+	border: 0.2vmax solid var(--ctr-color);
+	border-radius: 50%;
+	background-color: #444;
+	cursor: pointer;
+	box-shadow: var(--schadow);
+	overflow: hidden;
+}
+
+.slider-line {
+	display: flex;
+	transition: all ease 1s;
+}
+
+.slider-item {
+	height: 3.8vw;
+	width: 3.8vw;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.slider-item img {
+	height: 70%;
+}
+
+/******************* повороты ***************************/
+.move_center {
 	height: 4vw;
 	width: 4vw;
 	display: flex;
@@ -125,10 +157,11 @@ canvas {
 	box-shadow: var(--schadow);
 }
 
-.circle_box img {
-	width: 50%;
+.move_center img {
+	width: 70%;
 }
 
+/********************* svg стрелки ****************************/
 .svg_arrow {
 	width: 100%;
 	max-width: 2.0vw;
@@ -153,6 +186,7 @@ svg:active polyline {
 	stroke: var(--ctr-active);
 }
 
+/**************** подписи к группам кнопок *************************/
 .control_decor_title,
 .control_door_title,
 .control_motion_title {
@@ -170,21 +204,19 @@ svg:active polyline {
 	box-shadow: var(--schadow);
 }
 
-/*********************************************************/
+/************* скрыть панель управления в мобильном режиме ****************/
 @media screen and (orientation: portrait) {
 	.controls {
 		visibility: hidden;
 	}
-
 }
 
 /****************** DEBUG: метка кадра ***********************************/
 .label {
 	position: absolute;
-	top: 5px;
-	left: 5px;
-	font-size: 3vh;
-	border: none;
+	top: 0vw;
+	left: 15vw;
+	font-size: 2vw;
 	color: black;
 	text-shadow: 0px 0px 4px white;
 }

@@ -2,7 +2,7 @@
 	--ctr-color: rgba(255, 255, 255, 0.6);
 	--ctr-hover: rgba(255, 255, 155, 1.0);
 	--ctr-active: rgba(250, 255, 255, 1.0);
-	--schadow: 0px 0px 0.3vw black;
+	--schadow: -0.2vw 0.2vw 0.4vw rgb(50, 50, 50);
 }
 
 * {
@@ -63,7 +63,7 @@ canvas {
 .control_decor_house,
 .control_decor_door,
 .control_motion {
-	margin-top: 2vw;
+	margin-top: 1.0vw;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
@@ -171,10 +171,11 @@ canvas {
 
 svg {
 	fill: none;
-	stroke-width: 0.15vw;
 	stroke: var(--ctr-color);
+	stroke-width: 0.18vw;
 	stroke-linecap: round;
 	stroke-linejoin: round;
+	filter: drop-shadow(0px 0px 0.2vw black);
 	transition: stroke 0.4s ease-in-out;
 }
 
@@ -191,16 +192,15 @@ svg:active polyline {
 .control_door_title,
 .control_motion_title {
 	display: box;
-	margin: 10px auto;
+	margin: 0.5vw auto;
 	padding: 0 10px 0;
 	width: fit-content;
-	background-color: gray;
 	border-radius: 1vmax;
 	font-size: 0.7vw;
 	font-weight: 800;
 	line-height: 1.2vw;
-	color: white;
-	text-shadow: var(--schadow);
+	color: black;
+	background-color: var(--ctr-color);
 	box-shadow: var(--schadow);
 }
 

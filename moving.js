@@ -2,7 +2,6 @@
 
 const img_width = 1920;
 const img_height = 616;
-const img_rate = img_width / img_height;
 const img_total = 120 //количество изображений в каталоге
 
 const delay_povorot = 50; //задержка кадров поворота (ms) ps. при fps = 60 минимально выходит 16.67 ms
@@ -17,29 +16,19 @@ var frame_start = 61; //начальный кадр мотания (изобра
 var frame_end = 75;   //конечный кадр мотания (изображение 75.jpg)
 var frame_center = frame_start + Math.round(frames_motanie / 2);
 var frame_current = frame_center; //текущий кадр анимации (при запуске - центр)
+var imgnum = []; //массив соответствия номера кадра и номера изображения + вставка задержки кадров
 var animationID; // requestID анимации, для остановки
 var started = false; //флаг, true - анимация происходит в настоящий момент
 
 var House; //class - объект домиков/backgroumd
 var Doors; //class - объект дверей/object (слайдер, изменение)
 
-//TODO можно попробовать решить вопрос с переходом через ноль в функции Moving()
-var imgnum = []; //массив соответствия номера кадра и номера изображения + вставка задержки кадров
-for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, так как в анимации может выскочить undefined
-    let center = (frame_total - frames_motanie) / 2; //TODO важно правильно рассчитать центровой кадр
-    let img = (frm > center ? frm - center : frm + center);
-    let chet = ~~(~~(frm / 15) % 2); // ~~ целая часть  % остаток от деления
-    let del = (chet ? delay_povorot : delay_motanie_fast); //задержка кадра в зависимости от номера кадра
-    imgnum[frm] = { image: img, delay: del }; //каждому кадру соответствует номер изображения и задержка анимации
-}
-
-//настройки канваса
 const container = document.querySelector(".container"); //контейнер всей сцены
 const canvas = document.querySelector("canvas");
 var context = canvas.getContext("2d");
 var canvas_mode = true;  // true - горизонтальный режим (canvas включен), false - вертикальная ориентация
 
-
+//***************** CLASS домиков/background *************************/
 class HouseObject {
     constructor(params) {
         this.src = []; //массив изображений двери (фреймов)
@@ -74,7 +63,7 @@ class HouseObject {
     }
 }
 
-//***************** CLASS дверей *************************/
+//***************** CLASS дверей/object *************************/
 class DoorsObject {
     constructor(params) {
         this.src = []; //массив изображений двери (фреймов)
@@ -120,24 +109,30 @@ class DoorsObject {
 
 // инициализация при загрузке 
 window.addEventListener("load", () => {
+    //TODO можно попробовать решить вопрос с переходом через ноль в саомй функции Moving()
+    for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, так как в анимации может выскочить undefined
+        let center = (frame_total - frames_motanie) / 2; //TODO важно правильно рассчитать центровой кадр
+        let img = (frm > center ? frm - center : frm + center);
+        let chet = ~~(~~(frm / 15) % 2); // ~~ целая часть  % остаток от деления
+        let del = (chet ? delay_povorot : delay_motanie_fast); //задержка кадра в зависимости от номера кадра
+        imgnum[frm] = { image: img, delay: del }; //каждому кадру соответствует номер изображения и задержка анимации
+    }
     House = new HouseObject({ folder: "background", sub: "1" });
     House.check();
     Doors = new DoorsObject({ folder: "object", sub: "1" });
     Doors.check();
-    canvasResize();  //там же есть первый Moving(frame_current); //отображение центрального кадра (загрузка запустится при анимации)
-    loadingAll(frame_start, frame_end); //предзагрузка первых кадров мотания
-    loadingAll(frame_end + 1, frame_end + frames_povorot); //предзагрузка кадров поворота вправо
-    loadingAll(frame_start - frames_povorot, frame_start - 1); //предзагрузка кадров поворота влево
+    resizeScene();
+    loadingAll(frame_start, frame_end); //предзагрузка первых кадров мотания (чтобы сразу можно мотаться)
+    loadingAll(frame_start - frames_povorot, frame_end + frames_povorot); //предзагрузка кадров поворота 
 });
 
 // resize canvas
-window.addEventListener("resize", () => { canvasResize() });
-function canvasResize() {
+window.addEventListener("resize", () => { resizeScene() });
+function resizeScene() {
     Doors.initSlider();
     canvas_mode = (innerWidth > innerHeight)  //горизонтальная ориентация
-    let rate = (canvas_mode ? img_rate : 1.2); //соотношение сторон канваса в гориз. или вертик. режимах
+    let rate = (canvas_mode ? img_width / img_height : 1.2); //соотношение сторон канваса в гориз. или вертик. режимах
     container.style.height = container.offsetWidth / rate + "px";
-    if (canvas_mode) container.style.background = "url('./images/bg.jpg') left top / cover no-repeat";
     canvas.height = img_height; //вертикальное разрешение постоянное (горизонтальное меняется в вертикальном режиме)
     canvas.width = img_height * rate;  //горизонтальное разрешение канваса (это также ширина кадра)
     window.setTimeout(() => { Moving(frame_current) }, 500); //при поворотах мобилы resize() срабатывает дважды
@@ -145,12 +140,12 @@ function canvasResize() {
 
 //мотание TODO только для компьютерного режима (mousemove в мобильном не работает)
 var mpos_last; //предыдущее положение курсора мышки
-container.addEventListener("mousemove", (e) => {
+document.querySelector(".mouse-area").addEventListener("mousemove", (e) => {
     if (!canvas_mode) return;
     let mpos = mouseXY(e); //получить текущее положение мышки внутри container
     if (!mpos_last) { mpos_last = mpos; return; } //инициализация начального положения
     if (started) return; //если в процессе поворота то не реагировать
-    let dir = mpos.x - mpos_last.x;
+    let dir = mpos.x - mpos_last.x; //направление мотания
     if (dir > 0)
         Moving(frame_start, frame_end, delay_motanie);
     else
@@ -257,30 +252,11 @@ function loadingImages(obj, start, end) { //obj = текущий объект - 
         if (obj.src[frm] != undefined) continue; //если уже загружен или грузится в другом потоке
         obj.src[frm] = 0; //флаг - ставим файл в загрузку
         let fname = "./scene/" + obj.fld + "_" + obj.sub + "/" + imgnum[frm].image + obj.ext;
-        /*
-        fetch(fname)
-            .then((response) => {
-                if (!response.ok)
-                    throw "problem loading file (" + fname + ") " + response.statusText;
-                return response.blob(); //дальше передаём blob объект!
-            })
-            .then((blob) => {
-                let objectURL = URL.createObjectURL(blob);
-                let image = new Image();
-                image.src = objectURL;
-                obj.src[frm] = image; //загрузка в массив House или Doors
-                //console.log("ready: " + fname); //DEBUG вывод лога загрузки файлов
-            })
-            .catch((error) => {
-                console.log("ERROR fetch: " + error);
-            });
-        */
-        //без всяких фетчей
         let image = new Image();
         image.src = fname;
         obj.src[frm] = image; //загрузка в массив House или Doors
+        //TODO добавить индикатор и проверить асинхронность
     }
-
 }
 
 

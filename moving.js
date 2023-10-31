@@ -1,9 +1,5 @@
 "use strict"; //строгий режим
 
-/******************************************************************/
-//TODO добавить пиксельный поиск двери - для клика (надо только для центральных кадров)
-//можно просто обозначить x y w h прямоугольника примерно в районе двери или поместить туда div
-
 const img_width = 1920;
 const img_height = 616;
 const img_rate = img_width / img_height;
@@ -24,6 +20,8 @@ var frame_current = frame_center; //текущий кадр анимации (п
 var animationID; // requestID анимации, для остановки
 var started = false; //флаг, true - анимация происходит в настоящий момент
 
+var House; //class - объект домиков/backgroumd
+var Doors; //class - объект дверей/object (слайдер, изменение)
 
 //TODO можно попробовать решить вопрос с переходом через ноль в функции Moving()
 var imgnum = []; //массив соответствия номера кадра и номера изображения + вставка задержки кадров
@@ -35,62 +33,71 @@ for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, 
     imgnum[frm] = { image: img, delay: del }; //каждому кадру соответствует номер изображения и задержка анимации
 }
 
-//Объекты домика и дверей: src - url изображений, fld- каталог, sub- подкаталог, ext- расширение файла 
-var house = { src: [], fld: "background", sub: "1", ext: ".jpg" }; //объект домик (background)
-
 //настройки канваса
 const container = document.querySelector(".container"); //контейнер всей сцены
 const canvas = document.querySelector("canvas");
 var context = canvas.getContext("2d");
 var canvas_mode = true;  // true - горизонтальный режим (canvas включен), false - вертикальная ориентация
 
-//HTML инициализация кнопок изменения декора домика
-const arr_houses = [
-    { src: "fence_color_yellow.png", name: "Сосна" }, //prefix: "_1"
-    { src: "fence_color_brown.png", name: "Лиственница" }, //prefix: "_2"
-    { src: "fence_color_brown_black.png", name: "Палисандр" } //prefix: "_3"
-];
-for (let i = 0; i < arr_houses.length; i++) {
-    let decor_house = document.createElement("div");
-    document.querySelector(".control_decor_house").appendChild(decor_house);
-    decor_house.classList.add('decor_house');
-    decor_house.style.background = "url(images/fence_color/" + arr_houses[i].src + ") left top / cover no-repeat";
-    decor_house.setAttribute("data-text", arr_houses[i].name);
-};
 
-//выбор дома (цвета)
-const list_houses = document.querySelectorAll('.decor_house'); //выбора дома
-list_houses.forEach((b, i) => b.addEventListener('click', () => { checkHouse(i) }));
-function checkHouse(i) {
-    list_houses[house.sub - 1].removeAttribute("data-selected");
-    house.sub = (i + 1);
-    list_houses[house.sub - 1].setAttribute("data-selected", null);
-    document.querySelector(".control_decor_title span").textContent = arr_houses[house.sub - 1].name;
-    house.src = []; //очистил массив изображений... TODO добавить предзагрузку
-    window.setTimeout(() => { Moving(frame_current) }, 100);
+class HouseObject {
+    constructor(params) {
+        this.src = []; //массив изображений двери (фреймов)
+        this.fld = params.folder || "background";
+        this.sub = params.sub || "1";
+        this.ext = ".jpg";
+        this.arr_houses = [
+            { src: "fence_color_yellow.png", name: "Сосна" }, //prefix: "_1"
+            { src: "fence_color_brown.png", name: "Лиственница" }, //prefix: "_2"
+            { src: "fence_color_brown_black.png", name: "Палисандр" } //prefix: "_3"
+        ];
+        //HTML инициализация кнопок изменения декора домика
+        for (let i = 0; i < this.arr_houses.length; i++) {
+            let decor_house = document.createElement("div");
+            document.querySelector(".control_decor_house").appendChild(decor_house);
+            decor_house.classList.add('decor_house');
+            decor_house.style.background = "url(images/fence_color/" + this.arr_houses[i].src + ") left top / cover no-repeat";
+            decor_house.setAttribute("data-text", this.arr_houses[i].name);
+        };
+        this.list_houses = document.querySelectorAll('.decor_house'); //выбора дома
+        this.list_houses.forEach((b, i) => b.addEventListener('click', () => { this.check(i) }));
+    }
+    check(i) {
+        if (i == undefined) i = this.sub - 1;
+        this.list_houses[this.sub - 1].removeAttribute("data-selected");
+        this.list_houses[i].setAttribute("data-selected", null);
+        document.querySelector(".control_decor_title span").textContent = this.arr_houses[i].name;
+        this.sub = i + 1; //т.к. нумерация с нуля
+        this.src = []; //очистил массив изображений... 
+        //TODO добавить предзагрузку
+        window.setTimeout(() => { Moving(frame_current) }, 100);
+    }
 }
 
-//выбор двери
-class DoorsObject { //слайдер изменения двери 
+//***************** CLASS дверей *************************/
+class DoorsObject {
     constructor(params) {
-        this.src = [];
+        this.src = []; //массив изображений двери (фреймов)
         this.fld = params.folder || "object";
         this.sub = params.sub || "1";
         this.ext = ".png";
         this.slider = document.querySelector('.slider');
         this.sliderLine = document.querySelector('.slider-line');
-        this.numb = document.querySelectorAll('.slider-item').length;
-        this.width;
-        document.querySelector(".door_prev").addEventListener("click", () => { this.check(-1) });
-        document.querySelectorAll('.door_next').forEach((button) => button.addEventListener('click', () => { this.check(+1) }));
+        this.sliderNumb = document.querySelectorAll('.slider-item').length;
+        this.sliderWidth;
+        this.doorarea = document.querySelector(".door_area");
+        document.querySelector(".door_prev").addEventListener("click",
+            () => { this.check(-1) });
+        document.querySelectorAll('.door_next').forEach(
+            (button) => button.addEventListener('click', () => { this.check(+1) }));
     }
-    init() {
-        this.width = this.slider.clientWidth;
-        this.sliderLine.style.width = this.width * this.numb + 'px';
+    initSlider() {
+        this.sliderWidth = this.slider.clientWidth;
+        this.sliderLine.style.width = this.sliderWidth * this.sliderNumb + 'px';
         this.roll();
     }
     roll() {
-        this.sliderLine.style.transform = 'translate(-' + (this.sub - 1) * this.width + 'px)';
+        this.sliderLine.style.transform = 'translate(-' + (this.sub - 1) * this.sliderWidth + 'px)';
     }
     check(dir) {
         if (!dir) dir = 0;
@@ -99,16 +106,24 @@ class DoorsObject { //слайдер изменения двери
         if (this.sub > 3) this.sub = 1;
         document.querySelector(".control_door_title span").textContent = this.sub;
         this.roll();
-        this.src = [];
+        this.src = []; //обнулить массив изображений
+        //TODO добавить предзагрузку новых изображений двери (тогда можно убрать из инициализации)
         window.setTimeout(() => { Moving(frame_current) }, 100);
     }
+    hide(m) { //блок клацанья по двери в сцене включать только для центральных кадров (где видна дверь)
+        if (m)
+            this.doorarea.style.display = "block";
+        else
+            this.doorarea.style.display = "none";
+    }
 }
-var doors = new DoorsObject({ folder: "object", sub: "1" });
 
 // инициализация при загрузке 
 window.addEventListener("load", () => {
-    checkHouse(house.sub - 1);
-    doors.check();
+    House = new HouseObject({ folder: "background", sub: "1" });
+    House.check();
+    Doors = new DoorsObject({ folder: "object", sub: "1" });
+    Doors.check();
     canvasResize();  //там же есть первый Moving(frame_current); //отображение центрального кадра (загрузка запустится при анимации)
     loadingAll(frame_start, frame_end); //предзагрузка первых кадров мотания
     loadingAll(frame_end + 1, frame_end + frames_povorot); //предзагрузка кадров поворота вправо
@@ -118,7 +133,7 @@ window.addEventListener("load", () => {
 // resize canvas
 window.addEventListener("resize", () => { canvasResize() });
 function canvasResize() {
-    doors.init();
+    Doors.initSlider();
     canvas_mode = (innerWidth > innerHeight)  //горизонтальная ориентация
     let rate = (canvas_mode ? img_rate : 1.2); //соотношение сторон канваса в гориз. или вертик. режимах
     container.style.height = container.offsetWidth / rate + "px";
@@ -173,7 +188,6 @@ document.querySelector(".move_center").addEventListener("click", () => {
     frame_end = 75; //конец следующего мотания
 });
 
-
 /*************************** АНИМАЦИЯ ********************************/
 function Moving(first, last, delay) { //first - первый кадр, last - последений кадр
     if (started) return; //блокирование повторного запуска анимации
@@ -188,10 +202,10 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
         let frame_delay = (delay ? delay_motanie : imgnum[frame_current].delay);
         if (time - time_start > frame_delay) {
             time_start = time;
-            let S = house.src[frame_current];
-            let D = doors.src[frame_current];
+            let S = House.src[frame_current];
+            let D = Doors.src[frame_current];
             if (S && D) { //если оба слайда существюет в массиве - то отрисовываем его
-                label(imgnum[frame_current].image + ".jpg : " + frame_delay + "ms"); //DEBUG
+                label(`${frame_current} | ${imgnum[frame_current].image}.jpg | ${frame_delay}ms`); //DEBUG
                 let sx; //смещение кадра/фона в вертик. режиме
                 if (canvas_mode) {
                     //sx = canvas.height * 0.25; //смещение кадра в вертик. режиме
@@ -226,22 +240,24 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
 
 function StopMoving() {
     cancelAnimationFrame(animationID);
+    Doors.hide(60 < frame_current && frame_current < 76);
     started = false;
 }
 
 /*********************** Загрузка кадров ****************************/
 function loadingAll(start, end) { //start, end - номера первого и последнего кадра
     if (!end) end = start; //если задан один параметр - грузим один (start) кадр
-    loadingImages(house, start, end);   //загрузка кадров домика
-    loadingImages(doors, start, end);   //загрузка кадров двери
+    loadingImages(House, start, end);   //загрузка кадров домика
+    loadingImages(Doors, start, end);   //загрузка кадров двери
 }
-function loadingImages(obj, start, end) { //obj = текущий объект - house или doors
+function loadingImages(obj, start, end) { //obj = текущий объект - House или Doors
     if (end > frame_total) end = frame_total; //foolproof ограничить верхний предел
     if (start < 0) start = 1; //foolproof ограничить нижний предел
     for (let frm = start; frm <= end; frm++) {
         if (obj.src[frm] != undefined) continue; //если уже загружен или грузится в другом потоке
         obj.src[frm] = 0; //флаг - ставим файл в загрузку
         let fname = "./scene/" + obj.fld + "_" + obj.sub + "/" + imgnum[frm].image + obj.ext;
+        /*
         fetch(fname)
             .then((response) => {
                 if (!response.ok)
@@ -252,12 +268,17 @@ function loadingImages(obj, start, end) { //obj = текущий объект - 
                 let objectURL = URL.createObjectURL(blob);
                 let image = new Image();
                 image.src = objectURL;
-                obj.src[frm] = image; //загрузка в массив house или doors
+                obj.src[frm] = image; //загрузка в массив House или Doors
                 //console.log("ready: " + fname); //DEBUG вывод лога загрузки файлов
             })
             .catch((error) => {
                 console.log("ERROR fetch: " + error);
             });
+        */
+        //без всяких фетчей
+        let image = new Image();
+        image.src = fname;
+        obj.src[frm] = image; //загрузка в массив House или Doors
     }
 
 }

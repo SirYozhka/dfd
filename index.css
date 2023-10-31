@@ -162,7 +162,7 @@ canvas {
 }
 
 /********************* svg стрелки ****************************/
-.svg_arrow {
+.arrow {
 	width: 100%;
 	max-width: 2.0vw;
 	max-height: 2.0vw;
@@ -185,6 +185,19 @@ svg:hover polyline {
 
 svg:active polyline {
 	stroke: var(--ctr-active);
+}
+
+/* примерная область двери в сцене (TODO можно сделать пиксельный поиск двери через canvas) */
+.door_area {
+	position: absolute;
+	top: 16vw;
+	left: 29vw;
+	width: 7vw;
+	height: 11vw;
+	cursor: pointer;
+	background-color: antiquewhite;
+	opacity: 0;
+	visibility: visible;
 }
 
 /**************** подписи к группам кнопок *************************/

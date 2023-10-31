@@ -1,8 +1,8 @@
 :root {
-	--ctr-color: rgba(255, 255, 255, 0.6);
-	--ctr-hover: rgba(255, 255, 155, 1.0);
-	--ctr-active: rgba(250, 255, 255, 1.0);
-	--schadow: -0.2vw 0.2vw 0.4vw rgb(50, 50, 50);
+	--ctr-color: rgb(205, 205, 205);
+	--ctr-hover: rgb(255, 255, 55);
+	--ctr-active: rgb(250, 255, 255);
+	--schadow: -0.2vw 0.2vw 0.4vw rgb(0, 0, 0);
 }
 
 * {
@@ -14,15 +14,12 @@
 html,
 body {
 	width: 100%;
-	height: 100%;
-	min-height: 100%;
 	margin: 0;
 	padding: 0;
 	font-family: Tahoma, Arial, Verdana, sans-serif;
 	font-size: 1rem;
 	line-height: 1.8;
 	color: black;
-	-webkit-overflow-scrolling: touch;
 }
 
 main {
@@ -71,6 +68,7 @@ canvas {
 	opacity: 1.0;
 }
 
+/**************** общие стили кнопок *************************/
 .control_decor_house,
 .control_decor_door,
 .control_motion {
@@ -80,21 +78,32 @@ canvas {
 	align-items: center;
 }
 
-/****************** сцена-дом (background) ****************************/
-.decor_house {
+.decor_house,
+.slider,
+.move_center {
 	display: flex;
-	position: relative;
-	height: 3.0vw;
-	width: 3.0vw;
 	justify-content: center;
 	align-items: center;
-	font-size: 2.2vw;
-	font-weight: 100;
-	color: var(--ctr-active);
-	border: 0.2vmax solid var(--ctr-color);
+	border: 0.25vw solid var(--ctr-color);
 	border-radius: 50%;
 	cursor: pointer;
 	box-shadow: var(--schadow);
+}
+
+.decor_house:hover,
+.slider:hover,
+.move_center:hover {
+	border: 0.25vw solid var(--ctr-hover);
+}
+
+/****************** сцена-дом (background) ****************************/
+.decor_house {
+	position: relative;
+	height: 3.0vw;
+	width: 3.0vw;
+	font-size: 2.2vw;
+	font-weight: 100;
+	color: var(--ctr-active);
 	text-shadow: var(--schadow);
 }
 
@@ -102,10 +111,7 @@ canvas {
 	content: "\2714";
 }
 
-.decor_house:hover {
-	border: 0.25vmax solid var(--ctr-hover);
-}
-
+.slider:hover::after,
 .decor_house:hover::after {
 	position: absolute;
 	left: 0;
@@ -125,15 +131,10 @@ canvas {
 
 /******************* дверь ***************************/
 .slider {
+	justify-content: left;
 	height: 4vw;
 	width: 4vw;
-	display: flex;
-	align-items: center;
-	border: 0.2vmax solid var(--ctr-color);
-	border-radius: 50%;
 	background-color: #444;
-	cursor: pointer;
-	box-shadow: var(--schadow);
 	overflow: hidden;
 }
 
@@ -158,14 +159,7 @@ canvas {
 .move_center {
 	height: 4vw;
 	width: 4vw;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	border: 0.2vmax solid var(--ctr-color);
-	border-radius: 50%;
 	background-color: #444;
-	cursor: pointer;
-	box-shadow: var(--schadow);
 }
 
 .move_center img {
@@ -241,6 +235,5 @@ svg:active polyline {
 	top: 0vw;
 	left: 15vw;
 	font-size: 2vw;
-	color: black;
-	text-shadow: 0px 0px 4px white;
+	color: darkblue;
 }

@@ -14,7 +14,7 @@
 <body>
   <main>
 
-    <div class="container"> <!-- фон контейнера используем для отображения сцены в вертикальном режиме -->
+    <div class="container"> <!-- фон контейнера используем для отображения сцены в мобильном режиме -->
 
       <canvas>
         <!-- отображение сцены с помошью canvas в обычном режиме -->
@@ -25,25 +25,19 @@
 
           <!-- выбор дом/background -->
           <div class="control_decor_house">
-            <!-- элементы(кнопки) добавляются в JavaScript 
-          <div class="decor_house" data-text="Сосна" style="background: url(images/fence_color/fence_color_yellow.png) left top / cover no-repeat;"> </div>
-          <div class="decor_house" data-text="Лиственница" style="background: url(images/fence_color/fence_color_brown.png) left top / cover no-repeat;"> </div>
-          <div class="decor_house" data-text="Палисандр" style="background: url(images/fence_color/fence_color_brown_black.png) left top / cover no-repeat;"> </div>
-           -->
+            <!-- все элементы(кнопки) инициализируются в JavaScript (там массив соответствия) -->
           </div>
           <div class="control_decor_title">
-            Цвет: <span>???</span>
+            Цвет: <span>?</span>
           </div>
 
           <!-- выбор дверь -->
           <div class="control_decor_door">
-
             <div class="arrow door_prev">
               <svg viewBox="0 0 24 24">
                 <polyline points="16.34 20.59 7.66 11.9 16.14 3.41" />
               </svg>
             </div>
-
             <div class="slider door_next">
               <div class="slider-line">
                 <div class="slider-item"><img src="images/fence_decor/1.png"></div>
@@ -51,16 +45,14 @@
                 <div class="slider-item"><img src="images/fence_decor/3.png"></div>
               </div>
             </div>
-
             <div class="arrow door_next">
               <svg viewBox="0 0 24 24">
                 <polyline points="7.66 3.41 16.34 12.1 7.86 20.59" />
               </svg>
             </div>
-
           </div>
           <div class="control_door_title">
-            Входная дверь: <span>???</span>
+            Входная дверь: <span>?</span>
           </div>
 
           <!-- повороты -->
@@ -85,25 +77,25 @@
 
         </div>
         <div class="door_area door_next">
-          <!-- door in scene -->
+          <!-- область двери в сцене (координаты в CSS) -->
         </div>
         <div class="mouse-area">
-          <!-- оласть реакции на движение мышки для мотания отдельно, чтобы не моталось над панелью управления-->
+          <!-- оласть реакции на движение мышки для мотания (чтобы не дергалось над панелью управления) -->
         </div>
       </div>
 
       <div class="loader">
-        <!-- индикатор загрузки -->
+        <!-- индикатор загрузки файлов -->
       </div>
 
       <div class="label">
-        img : ms <!-- DEBUG: вывод отладочной информации -->
+        img : ms <!-- DEBUG: индикация режима анимации -->
       </div>
     </div>
 
   </main>
 
-  <!-- DEBUG логирование - вывод на экран  -->
+  <!-- DEBUG логирование на экран (отладка загрузки файлов) -->
   <div class="log">
     <style>
       div.log {

@@ -225,8 +225,8 @@ svg:active polyline {
 	position: absolute;
 	top: 50%;
 	left: 50%;
-	height: 4vw;
-	width: 4vw;
+	height: 10vh;
+	width: 10vh;
 	transform: translate(-50%, -50%);
 	border: 1vh solid var(--ctr-color);
 	border-top: 1vh solid #444;

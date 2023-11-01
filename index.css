@@ -246,7 +246,7 @@ svg:active polyline {
 	}
 }
 
-/************* скрыть панель управления в мобильном режиме ****************/
+/************* вертикальный режим ****************/
 @media screen and (orientation: portrait) {
 	.controls {
 		visibility: hidden;
@@ -261,13 +261,4 @@ svg:active polyline {
 		opacity: 0;
 		visibility: visible;
 	}
-}
-
-/****************** DEBUG: метка кадра ***********************************/
-.label {
-	position: absolute;
-	top: 0vw;
-	left: 15vw;
-	font-size: 2vw;
-	color: darkblue;
 }

@@ -286,8 +286,3 @@ function loadingImages(obj, start, end) { //obj = текущий объект - 
     }
 }
 
-
-/******************** DEBUG функции ***********************************/
-function label(message) { //DEBUG: режим, номер кадра, номер изображения, задержка кадра анимации
-    document.querySelector(".label").textContent = message;
-}

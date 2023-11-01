@@ -88,9 +88,13 @@
         <!-- индикатор загрузки файлов -->
       </div>
 
-      <div class="label">
-        img : ms <!-- DEBUG: индикация режима анимации -->
+      <!-- DEBUG: индикация режима анимации -->
+      <div class="label" style="position: absolute; top: 0vw; left: 15vw; font-size: 2vw; color: darkblue;">
+        <script>
+          function label(message) { document.querySelector(".label").textContent = message; }
+        </script>
       </div>
+
     </div>
 
   </main>

@@ -248,38 +248,44 @@ function loadingAll(start, end) { //start, end - номера первого и 
     loadingImages(Doors, start, end);   //загрузка кадров двери
 }
 
+class LoaderIndicator { //индикатор загрузки
+    constructor() {
+        this.count = 0; // счётчик запущеных загрузок файлов
+        this.div_ind = document.querySelector(".loader");
+    }
+    upd(dif) {
+        this.loader_count += dif;
+        if (this.loader_count > 0)
+            this.div_ind.style.visibility = "visible";
+        else {
+            this.div_ind.style.visibility = "hidden";
+            this.loader_count = 0; //на всякий случай
+        }
+    }
+}
+var loader = new LoaderIndicator();
+
 function loadingImages(obj, start, end) { //obj = текущий объект - House или Doors
     if (end > frame_total) end = frame_total; //foolproof ограничить верхний предел
     if (start < 0) start = 1; //foolproof ограничить нижний предел
-    loaderIndicator(end - start + 1);  //добавить в счетчик новые кадры
+    loader.upd(end - start + 1);  //добавить в счетчик новые кадры
     for (let frm = start; frm <= end; frm++) {
-        if (obj.img[frm] != undefined) { loaderIndicator(-1); continue; } //если уже загружен (=image) или грузится (= 0)
+        if (obj.img[frm] != undefined) { loader.upd(-1); continue; } //если уже загружен (=image) или грузится (= 0)
         obj.img[frm] = 0; //флаг - ставим файл в загрузку
         let fname = "./scene/" + obj.fld + "_" + obj.sub + "/" + imgnum[frm].image + obj.ext;
         let image = new Image();
         image.src = fname; //загрузка изображения
         image.onload = () => {
             obj.img[frm] = image; //загрузка в массив House или Doors
-            loaderIndicator(-1);
+            loader.upd(-1);
             //log(image.src);
         }
         image.onerror = () => {
-            loaderIndicator(- 1);
+            loader.upd(- 1);
         }
     }
 }
 
-var loader_count = 0; // счётчик запущеных загрузок файлов
-const div_ind = document.querySelector(".loader");
-function loaderIndicator(dif) {
-    loader_count += dif;
-    if (loader_count > 0)
-        div_ind.style.visibility = "visible";
-    else {
-        div_ind.style.visibility = "hidden";
-        loader_count = 0; //на всякий случай
-    }
-}
 
 /******************** DEBUG функции ***********************************/
 function label(message) { //DEBUG: режим, номер кадра, номер изображения, задержка кадра анимации

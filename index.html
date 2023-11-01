@@ -89,7 +89,25 @@
 
         </div>
         <div class="mouse-area">
-          <!-- оласть мотания отдельно, чтобы не моталось над панелью управления-->
+          <!-- оласть реакции на движение мышки для мотания отдельно, чтобы не моталось над панелью управления-->
+        </div>
+      </div>
+
+      <div class="loader">
+        <!-- индикатор загрузки -->
+        <div class="lds-default">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
         </div>
       </div>
 
@@ -99,13 +117,38 @@
     </div>
 
   </main>
-  <footer>
-    <!--
-      Отладка: поворот, ресайц, мобильн версия<br>
-      Готово : анимация поворотов (canvas или backround(url) + requestAnimationFrame)<br>
-      Готово : асинхронная загрузка изображений (fetch).
-    -->
-  </footer>
+
+  <!-- DEBUG логирование на экран  -->
+  <style>
+    div.log {
+      position: absolute;
+      top: 400px;
+      right: 2px;
+      width: fit-content;
+      height: calc(100% - 400px);
+      padding: 5px;
+      overflow: auto;
+      background-color: lightgrey;
+      font-size: 13px;
+      color: darkblue;
+      opacity: 0.7;
+      visibility: hidden;
+    }
+  </style>
+  <script>
+    const div_log = document.createElement("div");
+    div_log.classList.add('log');
+    document.body.appendChild(div_log); //добавляем в body
+    function log(message) {
+      div_log.style.visibility = "visible"; //при первом же логе делаем видимым
+      const p_msg = document.createElement("p");
+      div_log.appendChild(p_msg);
+      p_msg.textContent = message;
+      p_msg.scrollIntoView();
+    }
+  </script>
+
+
 </body>
 
 </html>

@@ -32,7 +32,7 @@ var mode_mobile = false; //комп - canvas включен, мобила - ан
 //***************** CLASS домиков/background *************************/
 class HouseObject {
     constructor(params) {
-        this.src = []; //массив изображений двери (фреймов)
+        this.img = []; //массив Image объектов изображений двери (фреймов)
         this.fld = params.folder || "background";
         this.sub = params.sub || "1";
         this.ext = ".jpg";
@@ -58,7 +58,7 @@ class HouseObject {
         this.list_houses[i].setAttribute("data-selected", null);
         document.querySelector(".control_decor_title span").textContent = this.arr_houses[i].name;
         this.sub = i + 1; //т.к. нумерация с нуля
-        this.src = []; //очистил массив изображений...
+        this.img = []; //очистил массив изображений...
         loadingImages(House, frame_start, frame_end);  //предзагрузка кадров текущего мотания
         loadingImages(House, frame_start - frames_povorot, frame_end + frames_povorot); //предзагрузка кадров поворота 
         window.setTimeout(() => { Moving(frame_current) }, 100);
@@ -68,7 +68,7 @@ class HouseObject {
 //***************** CLASS дверей/object *************************/
 class DoorsObject {
     constructor(params) {
-        this.src = []; //массив изображений двери (фреймов)
+        this.img = []; //массив  Image объектов изображений двери (фреймов)
         this.fld = params.folder || "object";
         this.sub = params.sub || "1";
         this.ext = ".png";
@@ -97,7 +97,7 @@ class DoorsObject {
         if (this.sub > 3) this.sub = 1;
         document.querySelector(".control_door_title span").textContent = this.sub;
         this.roll();
-        this.src = []; //обнулить массив изображений
+        this.img = []; //обнулить массив изображений
         loadingImages(Doors, frame_start, frame_end);  //предзагрузка кадров текущего мотания
         loadingImages(Doors, frame_start - frames_povorot, frame_end + frames_povorot); //предзагрузка кадров поворота 
         window.setTimeout(() => { Moving(frame_current) }, 100);
@@ -142,7 +142,7 @@ function resizeScene() {
 //мотание TODO только для компьютерного режима (mousemove в мобильном не работает)
 var mposX_last; //предыдущее положение курсора мышки
 document.querySelector(".mouse-area").addEventListener("mousemove", (mouse_event) => {
-    if (!mode_horizontal) return;
+    //if (!mode_horizontal) return;
     let mposx = mouse_event.clientX; //получить текущее положение мышки
     if (!mposX_last) { mposX_last = mposx; return; } //инициализация начального положения
     if (amination_started) return; //если в процессе поворота то не реагировать
@@ -200,9 +200,9 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
         let frame_delay = (delay ? delay_motanie : imgnum[frame_current].delay);
         if (time - time_start > frame_delay) {
             time_start = time;
-            label(`${(mode_mobile ? "bgr" : "can")} | ${frame_current} | ${imgnum[frame_current].image}.jpg | ${frame_delay}ms`); //DEBUG
-            let S = House.src[frame_current];
-            let D = Doors.src[frame_current];
+            label(`${(mode_mobile ? "background" : "canvas")} | ${imgnum[frame_current].image}.jpg | ${frame_delay}ms`); //DEBUG
+            let S = House.img[frame_current];
+            let D = Doors.img[frame_current];
             if (S && D) { //если оба слайда существюет в массиве - то отрисовываем его
                 let sx = 0; //смещение кадра
                 if (!mode_horizontal)
@@ -247,18 +247,30 @@ function loadingAll(start, end) { //start, end - номера первого и 
     loadingImages(House, start, end);   //загрузка кадров домика
     loadingImages(Doors, start, end);   //загрузка кадров двери
 }
+var loader_count = 0; //общий счётчик загрузок
 function loadingImages(obj, start, end) { //obj = текущий объект - House или Doors
     if (end > frame_total) end = frame_total; //foolproof ограничить верхний предел
     if (start < 0) start = 1; //foolproof ограничить нижний предел
     for (let frm = start; frm <= end; frm++) {
-        if (obj.src[frm] != undefined) continue; //если уже загружен или грузится в другом потоке
-        obj.src[frm] = 0; //флаг - ставим файл в загрузку
+        if (obj.img[frm] != undefined) { continue; } //если уже загружен (=image) или грузится (= 0)
+        obj.img[frm] = 0; //флаг - ставим файл в загрузку
+        loader_count++; //добавить в счетчик новые кадры
+        loaderIndicator();
         let fname = "./scene/" + obj.fld + "_" + obj.sub + "/" + imgnum[frm].image + obj.ext;
         let image = new Image();
-        image.src = fname;
-        obj.src[frm] = image; //загрузка в массив House или Doors
-        //TODO добавить индикатор и проверить асинхронность
+        image.src = fname; //загрузка изображения
+        image.onload = () => {
+            obj.img[frm] = image; //загрузка в массив House или Doors
+            loader_count--;
+            loaderIndicator();
+            //log(image.src);
+        }
     }
+}
+function loaderIndicator() {
+    let div_ind = document.querySelector(".loader");
+    if (loader_count) div_ind.style.display = "block";
+    else div_ind.style.display = "none";
 }
 
 /******************** DEBUG функции ***********************************/

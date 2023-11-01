@@ -247,30 +247,38 @@ function loadingAll(start, end) { //start, end - номера первого и 
     loadingImages(House, start, end);   //загрузка кадров домика
     loadingImages(Doors, start, end);   //загрузка кадров двери
 }
-var loader_count = 0; //общий счётчик загрузок
+
 function loadingImages(obj, start, end) { //obj = текущий объект - House или Doors
     if (end > frame_total) end = frame_total; //foolproof ограничить верхний предел
     if (start < 0) start = 1; //foolproof ограничить нижний предел
+    loaderIndicator(end - start + 1);  //добавить в счетчик новые кадры
     for (let frm = start; frm <= end; frm++) {
-        if (obj.img[frm] != undefined) { continue; } //если уже загружен (=image) или грузится (= 0)
+        if (obj.img[frm] != undefined) { loaderIndicator(-1); continue; } //если уже загружен (=image) или грузится (= 0)
         obj.img[frm] = 0; //флаг - ставим файл в загрузку
-        loader_count++; //добавить в счетчик новые кадры
-        loaderIndicator();
         let fname = "./scene/" + obj.fld + "_" + obj.sub + "/" + imgnum[frm].image + obj.ext;
         let image = new Image();
         image.src = fname; //загрузка изображения
         image.onload = () => {
             obj.img[frm] = image; //загрузка в массив House или Doors
-            loader_count--;
-            loaderIndicator();
+            loaderIndicator(-1);
             //log(image.src);
+        }
+        image.onerror = () => {
+            loaderIndicator(- 1);
         }
     }
 }
-function loaderIndicator() {
-    let div_ind = document.querySelector(".loader");
-    if (loader_count) div_ind.style.display = "block";
-    else div_ind.style.display = "none";
+
+var loader_count = 0; // счётчик запущеных загрузок файлов
+const div_ind = document.querySelector(".loader");
+function loaderIndicator(dif) {
+    loader_count += dif;
+    if (loader_count > 0)
+        div_ind.style.visibility = "visible";
+    else {
+        div_ind.style.visibility = "hidden";
+        loader_count = 0; //на всякий случай
+    }
 }
 
 /******************** DEBUG функции ***********************************/

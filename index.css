@@ -194,12 +194,11 @@ svg:active polyline {
 /* примерная область двери в сцене (TODO можно сделать пиксельный поиск двери через canvas) */
 .door_area {
 	position: absolute;
-	top: 16vw;
-	left: 29vw;
-	width: 7vw;
-	height: 11vw;
+	top: 50%;
+	left: 30vw;
+	width: 8vw;
+	height: 33%;
 	cursor: pointer;
-	background-color: antiquewhite;
 	opacity: 0;
 	visibility: visible;
 }
@@ -226,109 +225,24 @@ svg:active polyline {
 	position: absolute;
 	top: 50%;
 	left: 50%;
-	height: 6vw;
-	width: 6vw;
+	height: 4vw;
+	width: 4vw;
 	transform: translate(-50%, -50%);
-	display: none;
-}
-
-.lds-default {
-	position: relative;
-}
-
-/* шарики */
-.lds-default div {
-	position: absolute;
-	width: 6px;
-	height: 6px;
-	background: #444;
+	border: 1vh solid var(--ctr-color);
+	border-top: 1vh solid #444;
+	border-right: 1vh solid #444;
 	border-radius: 50%;
-	animation: lds-default 1.0s linear infinite;
+	animation: spin 1s linear infinite;
+	visibility: visible;
 }
 
-.lds-default div:nth-child(1) {
-	animation-delay: 0s;
-	top: 37px;
-	left: 66px;
-}
-
-.lds-default div:nth-child(2) {
-	animation-delay: -0.1s;
-	top: 22px;
-	left: 62px;
-}
-
-.lds-default div:nth-child(3) {
-	animation-delay: -0.2s;
-	top: 11px;
-	left: 52px;
-}
-
-.lds-default div:nth-child(4) {
-	animation-delay: -0.3s;
-	top: 7px;
-	left: 37px;
-}
-
-.lds-default div:nth-child(5) {
-	animation-delay: -0.4s;
-	top: 11px;
-	left: 22px;
-}
-
-.lds-default div:nth-child(6) {
-	animation-delay: -0.5s;
-	top: 22px;
-	left: 11px;
-}
-
-.lds-default div:nth-child(7) {
-	animation-delay: -0.6s;
-	top: 37px;
-	left: 7px;
-}
-
-.lds-default div:nth-child(8) {
-	animation-delay: -0.7s;
-	top: 52px;
-	left: 11px;
-}
-
-.lds-default div:nth-child(9) {
-	animation-delay: -0.8s;
-	top: 62px;
-	left: 22px;
-}
-
-.lds-default div:nth-child(10) {
-	animation-delay: -0.9s;
-	top: 66px;
-	left: 37px;
-}
-
-.lds-default div:nth-child(11) {
-	animation-delay: -1s;
-	top: 62px;
-	left: 52px;
-}
-
-.lds-default div:nth-child(12) {
-	animation-delay: -1.1s;
-	top: 52px;
-	left: 62px;
-}
-
-@keyframes lds-default {
-
-	0%,
-	20%,
-	80%,
-	100% {
-		transform: scale(1);
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
 	}
 
-	50% {
-		transform: scale(2.0);
+	100% {
+		transform: rotate(360deg);
 	}
 }
 
@@ -336,6 +250,16 @@ svg:active polyline {
 @media screen and (orientation: portrait) {
 	.controls {
 		visibility: hidden;
+	}
+
+	.door_area {
+		position: absolute;
+		top: 50%;
+		left: 61vw;
+		width: 13vw;
+		height: 33%;
+		opacity: 0;
+		visibility: visible;
 	}
 }
 

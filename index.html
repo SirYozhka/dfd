@@ -58,10 +58,6 @@
               </svg>
             </div>
 
-            <div class="door_area door_next">
-              door in canvas
-            </div>
-
           </div>
           <div class="control_door_title">
             Входная дверь: <span>???</span>
@@ -88,6 +84,9 @@
           </div>
 
         </div>
+        <div class="door_area door_next">
+          <!-- door in scene -->
+        </div>
         <div class="mouse-area">
           <!-- оласть реакции на движение мышки для мотания отдельно, чтобы не моталось над панелью управления-->
         </div>
@@ -95,20 +94,6 @@
 
       <div class="loader">
         <!-- индикатор загрузки -->
-        <div class="lds-default">
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-        </div>
       </div>
 
       <div class="label">
@@ -118,36 +103,35 @@
 
   </main>
 
-  <!-- DEBUG логирование на экран  -->
-  <style>
-    div.log {
-      position: absolute;
-      top: 400px;
-      right: 2px;
-      width: fit-content;
-      height: calc(100% - 400px);
-      padding: 5px;
-      overflow: auto;
-      background-color: lightgrey;
-      font-size: 13px;
-      color: darkblue;
-      opacity: 0.7;
-      visibility: hidden;
-    }
-  </style>
-  <script>
-    const div_log = document.createElement("div");
-    div_log.classList.add('log');
-    document.body.appendChild(div_log); //добавляем в body
-    function log(message) {
-      div_log.style.visibility = "visible"; //при первом же логе делаем видимым
-      const p_msg = document.createElement("p");
-      div_log.appendChild(p_msg);
-      p_msg.textContent = message;
-      p_msg.scrollIntoView();
-    }
-  </script>
-
+  <!-- DEBUG логирование - вывод на экран  -->
+  <div class="log">
+    <style>
+      div.log {
+        position: absolute;
+        top: 400px;
+        right: 2px;
+        width: fit-content;
+        height: calc(100% - 400px);
+        padding: 5px;
+        overflow: auto;
+        background-color: lightgrey;
+        font-size: 13px;
+        color: darkblue;
+        opacity: 0.7;
+        visibility: hidden;
+      }
+    </style>
+    <script>
+      const div_log = document.querySelector(".log");
+      function log(message) {
+        div_log.style.visibility = "visible"; //при первом же логе делаем видимым
+        const p_msg = document.createElement("p");
+        div_log.appendChild(p_msg);
+        p_msg.textContent = message;
+        p_msg.scrollIntoView();
+      }
+    </script>
+  </div>
 
 </body>
 

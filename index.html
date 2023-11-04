@@ -12,15 +12,19 @@
 </head>
 
 <body>
+  <header>
+    <!-- header -->
+  </header>
   <main>
 
-    <div class="container"> <!-- фон контейнера используем для отображения сцены в мобильном режиме -->
+    <div class="container">
 
       <canvas>
         <!-- отображение сцены с помошью canvas в обычном режиме -->
       </canvas>
 
-      <div class="scene">
+      <div class="scene"> <!-- отображения сцены в мобильном режиме с помошью background-image(s) -->
+
         <div class="controls"> <!-- панель управления-->
 
           <!-- выбор дом/background -->
@@ -76,31 +80,33 @@
           </div>
 
         </div>
-        <div class="door_area door_next">
-          <!-- область двери в сцене (координаты в CSS) -->
-        </div>
+
         <div class="mouse-area">
           <!-- оласть реакции на движение мышки для мотания (чтобы не дергалось над панелью управления) -->
         </div>
-      </div>
 
-      <div class="loader">
-        <!-- индикатор загрузки файлов -->
-      </div>
+        <div class="door_area door_next">
+          <!-- область двери в сцене (координаты в CSS) -->
+        </div>
 
-      <!-- DEBUG: индикация режима анимации -->
-      <div class="label" style="position: absolute; top: 0vw; left: 15vw; font-size: 2vw; color: darkblue;">
-        <script>
-          function label(message) { document.querySelector(".label").textContent = message; }
-        </script>
-      </div>
+        <div class="loader">
+          <!-- индикатор загрузки файлов -->
+        </div>
 
+        <!-- DEBUG: индикация режима анимации -->
+        <div class="label-box" style="position: absolute; top: 0vw; left: 15vw; font-size: 2vw; color: darkblue;">
+          <script>
+            function LAB(message) { document.querySelector(".label-box").textContent = message; }
+          </script>
+        </div>
+
+      </div>
     </div>
-
   </main>
 
+  <footer> </footer>
   <!-- DEBUG логирование на экран (отладка загрузки файлов) -->
-  <div class="log">
+  <div class="log-box">
     <style>
       div.log {
         position: absolute;
@@ -118,8 +124,8 @@
       }
     </style>
     <script>
-      const div_log = document.querySelector(".log");
-      function log(message) {
+      const div_log = document.querySelector(".log-box");
+      function LOG(message) {
         div_log.style.visibility = "visible"; //при первом же логе делаем видимым
         const p_msg = document.createElement("p");
         div_log.appendChild(p_msg);

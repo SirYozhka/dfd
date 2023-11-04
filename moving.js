@@ -1,5 +1,10 @@
 "use strict"; //строгий режим
 
+//MOBILE = (innerWidth + innerHeight) < 1400;
+//MOBILE = (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+const MOBILE = (navigator.maxTouchPoints > 0) && ('orientation' in window) // mobile : desktop
+//TODO нужна доп проверка (можно включить тачскрин на ноуте и поставить верт ориентацию)
+
 const img_width = 1920;
 const img_height = 616;
 const img_total = 120 //количество изображений в каталоге
@@ -26,8 +31,7 @@ var Doors; //class - объект дверей/object (слайдер, изме�
 const container = document.querySelector(".container"); //контейнер всей сцены
 const canvas = document.querySelector("canvas");
 var context = canvas.getContext("2d");
-var mode_horizontal = true;  // true - горизонтальный режим, false - вертикальная ориентация
-var mode_mobile = false; //комп - canvas включен, мобила - анимация через background-image
+var modeVertical = false;  // true - вертикальная ориентация, false - горизонтальный режим
 
 //***************** CLASS домиков/background *************************/
 class HouseObject {
@@ -110,8 +114,7 @@ class DoorsObject {
 
 // инициализация при загрузке 
 window.addEventListener("load", () => {
-    mode_mobile = (innerWidth < 900);
-    //TODO можно попробовать решить вопрос с переходом через ноль в саомй функции Moving()
+    //TODO можно попробовать решить вопрос с переходом через ноль прямо в функции Moving()
     for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, так как в анимации может выскочить undefined
         let center = (frame_total - frames_motanie) / 2; //надо правильно рассчитать центровой кадр
         let img = (frm > center ? frm - center : frm + center);
@@ -127,23 +130,26 @@ window.addEventListener("load", () => {
 });
 
 // resize сцены
-window.addEventListener("resize", () => { resizeScene() });
+window.addEventListener("resize", () => setTimeout(() => { resizeScene() }, 100));
 function resizeScene() {
-    mode_mobile = (innerWidth < 900); //DEBUG проверка для маленького экрана
     Doors.initSlider();
-    mode_horizontal = (innerWidth > innerHeight)  //горизонтальная ориентация
-    let rate = (mode_horizontal ? img_width / img_height : 1.2); //соотношение сторон канваса в гориз. или вертик. режимах
-    container.style.height = container.offsetWidth / rate + "px";
-    canvas.height = img_height; //вертикальное разрешение постоянное (горизонтальное меняется в вертикальном режиме)
-    canvas.width = img_height * rate;  //горизонтальное разрешение канваса (это также ширина кадра)
-    window.setTimeout(() => { Moving(frame_current) }, 500); //при поворотах мобилы resize() срабатывает дважды
+    modeVertical = (innerWidth < innerHeight)  //вертикальная ориентация (сверить в .visualViewport если iframe)
+    //let rate = (modeVertical ? 1.2 : img_width / img_height); //соотношение сторон канваса в гориз. или вертик. режимах
+    //    container.style.height = container.offsetWidth / rate + "px"; //подгоняем высоту контейнера
+    let rate = container.offsetWidth / container.offsetHeight; //соотношение сторон канваса
+    canvas.height = img_height; //вертикальное разрешение
+    canvas.width = img_height * rate;  //горизонтальное разрешение
+    Moving(frame_current);
 }
 
 //мотание TODO только для компьютерного режима (mousemove в мобильном не работает)
 var mposX_last; //предыдущее положение курсора мышки
-document.querySelector(".mouse-area").addEventListener("mousemove", (mouse_event) => {
-    //if (!mode_horizontal) return;
-    let mposx = mouse_event.clientX; //получить текущее положение мышки
+if (MOBILE)
+    document.addEventListener('touchstart', (e) => { Motion(e.touches[0].clientX); });
+else
+    document.querySelector(".mouse-area").addEventListener("mousemove", (e) => { Motion(e.clientX); });
+
+function Motion(mposx) {
     if (!mposX_last) { mposX_last = mposx; return; } //инициализация начального положения
     if (amination_started) return; //если в процессе поворота то не реагировать
     let dir = mposx - mposX_last; //направление мотания
@@ -154,7 +160,7 @@ document.querySelector(".mouse-area").addEventListener("mousemove", (mouse_event
             Moving(frame_end, frame_start, delay_motanie);
     }
     mposX_last = mposx;
-});
+};
 
 // поворот вперёд 
 document.querySelector(".move_forward").addEventListener("click", () => {
@@ -200,18 +206,18 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
         let frame_delay = (delay ? delay_motanie : imgnum[frame_current].delay);
         if (time - time_start > frame_delay) {
             time_start = time;
-            label(`${(mode_mobile ? "background" : "canvas")} | ${imgnum[frame_current].image}.jpg | ${frame_delay}ms`); //DEBUG
+            LAB(`${(MOBILE ? "mobile" : "desktop")} | ${imgnum[frame_current].image}.jpg | ${frame_delay}ms`); //DEBUG
             let S = House.img[frame_current];
             let D = Doors.img[frame_current];
-            if (S && D) { //если оба слайда существюет в массиве - то отрисовываем его
-                let sx = 0; //смещение кадра
-                if (!mode_horizontal)
-                    sx = container.clientHeight * 0.25; //смещение кадра(фона) в вертик. режиме
-                if (mode_mobile) { //режим background-image (для ускорения мобильного режима)
+            if (S && D) { //если оба слайда загружены
+                let sx = 0;
+                if (modeVertical) //смещение кадра(фона) для вертик режима
+                    sx = container.clientHeight * 0.25;
+                if (MOBILE) { //режим background-image (в мобильном режиме быстрее)
                     container.style.background = "url(" + D.src + ") left top / cover no-repeat ";
                     container.style.background += ", url(" + S.src + ") left top / cover no-repeat ";
                     container.style.backgroundPosition = -sx + "px";
-                } else { //режим canvas 
+                } else { //режим canvas (можно сделать opacity: 0.8 и добавить фон)
                     context.drawImage(S, sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
                     context.drawImage(D, sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
                 }
@@ -278,7 +284,7 @@ function loadingImages(obj, start, end) { //obj = текущий объект - 
         image.onload = () => {
             obj.img[frm] = image; //загрузка в массив House или Doors
             loader.upd(-1);
-            //log(image.src);
+            //LOG(image.src);
         }
         image.onerror = () => {
             loader.upd(- 1);

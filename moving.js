@@ -142,13 +142,13 @@ function resizeScene() {
     Moving(frame_current);
 }
 
-//мотание TODO только для компьютерного режима (mousemove в мобильном не работает)
-var mposX_last; //предыдущее положение курсора мышки
+//мотание TODO 
 if (MOBILE)
     document.addEventListener('touchstart', (e) => { Motion(e.touches[0].clientX); });
 else
     document.querySelector(".mouse-area").addEventListener("mousemove", (e) => { Motion(e.clientX); });
 
+var mposX_last; //предыдущее положение курсора мышки
 function Motion(mposx) {
     if (!mposX_last) { mposX_last = mposx; return; } //инициализация начального положения
     if (amination_started) return; //если в процессе поворота то не реагировать

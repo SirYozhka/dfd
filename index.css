@@ -22,20 +22,26 @@ body {
 	color: black;
 }
 
-main {
-	margin: 69px 0 0;
+header {
+	height: 5vh;
 }
 
 .container {
 	position: relative;
+	margin: 0px auto;
 	width: 100%;
+	max-width: calc(1920/616 * 90vh);
 	height: 90vh;
+	max-height: 100vw;
+	min-height: 308px;
 	padding: 0px;
 	background: url(images/bg.jpg);
 	background-size: cover;
 	background-repeat: no-repeat;
 	border: 1px solid black;
 }
+
+/*@media screen and (orientation: portrait) {*/
 
 canvas {
 	opacity: 1.0;
@@ -64,7 +70,7 @@ canvas {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	opacity: 1.0;
+	border: 1px solid black;
 }
 
 /**************** общие стили кнопок *************************/
@@ -199,7 +205,7 @@ svg:active polyline {
 	width: 8vw;
 	height: 33%;
 	cursor: pointer;
-	opacity: 0;
+	opacity: 0.3;
 	visibility: visible;
 }
 
@@ -246,7 +252,7 @@ svg:active polyline {
 	}
 }
 
-/************* вертикальный режим ****************/
+/************* вертикальный режим ****************
 @media screen and (orientation: portrait) {
 	.controls {
 		visibility: hidden;
@@ -262,3 +268,4 @@ svg:active polyline {
 		visibility: visible;
 	}
 }
+*/

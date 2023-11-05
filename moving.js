@@ -34,6 +34,9 @@ var context = canvas.getContext("2d");
 var modeVertical = false;  // true - вертикальная ориентация, false - горизонтальный режим
 var canvasSX; //смещение кадра(фона) для вертик режима
 
+const mouse_area = document.querySelector(".mouse-area"); //область реакции на мышку
+
+
 //***************** CLASS домиков/background *************************/
 class HouseObject {
     constructor(params) {
@@ -56,9 +59,11 @@ class HouseObject {
         };
         this.list_houses = document.querySelectorAll('.decor_house'); //выбора дома
         this.list_houses.forEach((b, i) => b.addEventListener('click', () => { this.check(i) }));
+        mouse_area.addEventListener('click', () => { this.check(this.sub); });
     }
-    check(i) {
-        if (i == undefined) i = this.sub - 1;
+    check(i) { //нумерация с нуля todo - исправить?
+        if (i == undefined) i = this.sub - 1; //для начальной инициализации todo упростить
+        if (i > this.arr_houses.length - 1) i = 0;
         this.list_houses[this.sub - 1].removeAttribute("data-selected");
         this.list_houses[i].setAttribute("data-selected", null);
         document.querySelector(".control_decor_title span").textContent = this.arr_houses[i].name;
@@ -165,7 +170,7 @@ if (MOBILE) {
                 MoveBackward();
     });
 } else
-    document.querySelector(".mouse-area").addEventListener("mousemove", (e) => {
+    mouse_area.addEventListener("mousemove", (e) => {
         newX = e.clientX;
         if (!lastX) lastX = newX; //инициализация начального положения
         dX = newX - lastX;

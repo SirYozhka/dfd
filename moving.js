@@ -32,6 +32,7 @@ const container = document.querySelector(".container"); //контейнер в�
 const canvas = document.querySelector("canvas");
 var context = canvas.getContext("2d");
 var modeVertical = false;  // true - вертикальная ориентация, false - горизонтальный режим
+var canvasSX; //смещение кадра(фона) для вертик режима
 
 //***************** CLASS домиков/background *************************/
 class HouseObject {
@@ -136,53 +137,73 @@ function resizeScene() {
     modeVertical = (innerWidth < innerHeight)  //вертикальная ориентация (сверить в .visualViewport если iframe)
     //let rate = (modeVertical ? 1.2 : img_width / img_height); //соотношение сторон канваса в гориз. или вертик. режимах
     //    container.style.height = container.offsetWidth / rate + "px"; //подгоняем высоту контейнера
-    let rate = container.offsetWidth / container.offsetHeight; //соотношение сторон канваса
+    canvasSX = Math.round(container.clientHeight * 0.3); //смещение кадра(фона) для вертик режима
+    let rate = container.clientWidth / container.clientHeight; //соотношение сторон канваса
     canvas.height = img_height; //вертикальное разрешение
     canvas.width = img_height * rate;  //горизонтальное разрешение
     Moving(frame_current);
 }
 
 //мотание TODO 
-if (MOBILE)
-    document.addEventListener('touchstart', (e) => { Motion(e.touches[0].clientX); });
-else
-    document.querySelector(".mouse-area").addEventListener("mousemove", (e) => { Motion(e.clientX); });
+var lastX, newX, dX; //предыдущееи и новое положение мышки/тача
+if (MOBILE) {
+    document.addEventListener('touchstart', (e) => {
+        lastX = e.changedTouches[0].clientX;
+    });
+    document.addEventListener('touchend', (e) => {
+        newX = e.changedTouches[0].clientX;
+        dX = newX - lastX;
+        if (Math.abs(dX) < 5) return;
+        if (Math.abs(dX) < 30)
+            Motion(dX);
+        else
+            if (dX < 0)
+                MoveForward();
+            else
+                MoveBackward();
+    });
+} else
+    document.querySelector(".mouse-area").addEventListener("mousemove", (e) => {
+        newX = e.clientX;
+        if (!lastX) lastX = newX; //инициализация начального положения
+        dX = newX - lastX;
+        Motion(dX);
+        lastX = newX;
+    });
 
-var mposX_last; //предыдущее положение курсора мышки
-function Motion(mposx) {
-    if (!mposX_last) { mposX_last = mposx; return; } //инициализация начального положения
-    if (amination_started) return; //если в процессе поворота то не реагировать
-    let dir = mposx - mposX_last; //направление мотания
-    if (Math.abs(dir) > 3) { //только при быстром перемещении мыши
+function Motion(dir) {
+    if (amination_started || !dir) return; //не реагировать если в процессе поворота или нет перемещения
+    if (Math.abs(dir) > 3) { //переместили мышь/тач более чем на 3 пиксела
         if (dir > 0)
             Moving(frame_start, frame_end, delay_motanie);
         else
             Moving(frame_end, frame_start, delay_motanie);
     }
-    mposX_last = mposx;
 };
 
 // поворот вперёд 
-document.querySelector(".move_forward").addEventListener("click", () => {
+document.querySelector(".move_forward").addEventListener("click", () => { MoveForward() });
+function MoveForward() {
     StopMoving(); //остановить мотание (иначе будет накладка анимаций)
     Moving(frame_current, frame_end + frames_povorot + 1); //анимация мотания до конца + поворот
     if (frame_end < frame_total) {
         frame_start += n_pm; //старт следующего мотания
         frame_end += n_pm; //конец следующего мотания
-        loadingAll(frame_start, frame_end); //загрузка следующего мотания!
+        loadingAll(frame_start, frame_end + frames_povorot); //загрузка следующего мотания!
     }
-});
+};
 
 // поворот назад 
-document.querySelector(".move_backward").addEventListener("click", () => {
+document.querySelector(".move_backward").addEventListener("click", () => { MoveBackward() });
+function MoveBackward() {
     StopMoving(); //остановить мотание (иначе будет накладка анимаций)
     Moving(frame_current, frame_start - frames_povorot - 1);
     if (1 < frame_start) {
         frame_start -= n_pm; //старт следующего мотания
         frame_end -= n_pm; //конец следующего мотания
-        loadingAll(frame_start, frame_end); //загрузка следующего мотания!
+        loadingAll(frame_start - frames_povorot, frame_end); //загрузка следующего мотания!
     }
-});
+};
 
 // центрировать
 document.querySelector(".move_center").addEventListener("click", () => {
@@ -210,12 +231,10 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
             let S = House.img[frame_current];
             let D = Doors.img[frame_current];
             if (S && D) { //если оба слайда загружены
-                let sx = 0;
-                if (modeVertical) //смещение кадра(фона) для вертик режима
-                    sx = container.clientHeight * 0.25;
+                let sx = (modeVertical ? canvasSX : 0); //смещение кадра(фона) для вертик режима
                 if (MOBILE) { //режим background-image (в мобильном режиме быстрее)
-                    container.style.background = "url(" + D.src + ") left top / cover no-repeat ";
-                    container.style.background += ", url(" + S.src + ") left top / cover no-repeat ";
+                    container.style.background = "url(" + D.src + ") left top / cover";
+                    container.style.background += ", url(" + S.src + ") left top / cover";
                     container.style.backgroundPosition = -sx + "px";
                 } else { //режим canvas (можно сделать opacity: 0.8 и добавить фон)
                     context.drawImage(S, sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
@@ -292,3 +311,28 @@ function loadingImages(obj, start, end) { //obj = текущий объект - 
     }
 }
 
+//********** вычисление области двери *****************************
+//в файле PNG пиксели двери > 0  (остальная область - прозрачная)
+function scan(pic) {
+    let mask_canvas = document.createElement('canvas');
+    let mask_context = mask_canvas.getContext('2d');
+    mask_canvas.width = pic.width / 4;
+    mask_canvas.height = pic.height / 4;
+
+    mask_context.drawImage(pic, 0, 0, mask_canvas.width, mask_canvas.height);
+    let P = mask_context.getImageData(0, 0, mask_canvas.width, mask_canvas.height);
+
+    let x1, y1;
+    let w, h;
+    let bg = true;
+    for (let x = 0; x < mask_canvas.width / 2; x++)
+        for (let y = 0; y < mask_canvas.height; y++) {
+            let num = (y * mask_canvas.width + x) * 4;
+            if (P.data[num + 3] > 0) { //не пустая часть = дверь
+                x1 = x;
+                y1 = y;
+                break;
+            }
+        }
+    return { x: x1, y: y1, w: (x2 - x1), h: (y2 - y1) };
+}

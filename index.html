@@ -15,93 +15,87 @@
   <header>
     <!-- header -->
   </header>
-  <main>
+  <main class="container">
 
-    <div class="container">
+    <canvas>
+      <!-- отображение сцены с помошью canvas в обычном режиме -->
+    </canvas>
 
-      <canvas>
-        <!-- отображение сцены с помошью canvas в обычном режиме -->
-      </canvas>
+    <div class="controls"> <!-- отображения сцены в мобильном режиме с помошью background-image(s) -->
+      <div class="controls-buttons-area"> <!-- панель управления-->
 
-      <div class="scene"> <!-- отображения сцены в мобильном режиме с помошью background-image(s) -->
-
-        <div class="controls"> <!-- панель управления-->
-
-          <!-- выбор дом/background -->
-          <div class="control_decor_house">
-            <!-- все элементы(кнопки) инициализируются в JavaScript (там массив соответствия) -->
-          </div>
-          <div class="control_decor_title">
-            Цвет: <span>?</span>
-          </div>
-
-          <!-- выбор дверь -->
-          <div class="control_decor_door">
-            <div class="arrow door_prev">
-              <svg viewBox="0 0 24 24">
-                <polyline points="16.34 20.59 7.66 11.9 16.14 3.41" />
-              </svg>
-            </div>
-            <div class="slider door_next">
-              <div class="slider-line">
-                <div class="slider-item"><img src="images/fence_decor/1.png"></div>
-                <div class="slider-item"><img src="images/fence_decor/2.png"></div>
-                <div class="slider-item"><img src="images/fence_decor/3.png"></div>
-              </div>
-            </div>
-            <div class="arrow door_next">
-              <svg viewBox="0 0 24 24">
-                <polyline points="7.66 3.41 16.34 12.1 7.86 20.59" />
-              </svg>
-            </div>
-          </div>
-          <div class="control_door_title">
-            Входная дверь: <span>?</span>
-          </div>
-
-          <!-- повороты -->
-          <div class="control_motion">
-            <div class="arrow move_backward">
-              <svg viewBox="0 0 24 24">
-                <polyline points="16.34 20.59 7.66 11.9 16.14 3.41" />
-              </svg>
-            </div>
-            <div class="move_center">
-              <img src="images/oblet.png">
-            </div>
-            <div class="arrow move_forward">
-              <svg viewBox="0 0 24 24">
-                <polyline points="7.66 3.41 16.34 12.1 7.86 20.59" />
-              </svg>
-            </div>
-          </div>
-          <div class="control_motion_title">
-            Повернуть дом
-          </div>
-
+        <!-- выбор дом/background -->
+        <div class="control_decor_house">
+          <!-- все элементы(кнопки) инициализируются в JavaScript (там массив соответствия) -->
+        </div>
+        <div class="control_decor_title">
+          Цвет: <span>?</span>
         </div>
 
-        <div class="mouse-area">
-          <!-- оласть реакции на движение мышки для мотания (чтобы не дергалось над панелью управления) -->
+        <!-- выбор дверь -->
+        <div class="control_decor_door">
+          <div class="arrow door_prev">
+            <svg viewBox="0 0 24 24">
+              <polyline points="16.34 20.59 7.66 11.9 16.14 3.41" />
+            </svg>
+          </div>
+          <div class="slider door_next">
+            <div class="slider-line">
+              <div class="slider-item"><img src="images/fence_decor/1.png"></div>
+              <div class="slider-item"><img src="images/fence_decor/2.png"></div>
+              <div class="slider-item"><img src="images/fence_decor/3.png"></div>
+            </div>
+          </div>
+          <div class="arrow door_next">
+            <svg viewBox="0 0 24 24">
+              <polyline points="7.66 3.41 16.34 12.1 7.86 20.59" />
+            </svg>
+          </div>
+        </div>
+        <div class="control_door_title">
+          Входная дверь: <span>?</span>
         </div>
 
-        <div class="door_area door_next">
-          <!-- область двери в сцене (координаты в CSS) -->
+        <!-- повороты -->
+        <div class="control_motion">
+          <div class="arrow move_backward">
+            <svg viewBox="0 0 24 24">
+              <polyline points="16.34 20.59 7.66 11.9 16.14 3.41" />
+            </svg>
+          </div>
+          <div class="move_center">
+            <img src="images/oblet.png">
+          </div>
+          <div class="arrow move_forward">
+            <svg viewBox="0 0 24 24">
+              <polyline points="7.66 3.41 16.34 12.1 7.86 20.59" />
+            </svg>
+          </div>
         </div>
-
-        <div class="loader">
-          <!-- индикатор загрузки файлов -->
-        </div>
-
-        <!-- DEBUG: индикация режима анимации -->
-        <div class="label-box" style="position: absolute; top: 0vw; left: 15vw; font-size: 2vw; color: darkblue;">
-          <script>
-            function LAB(message) { document.querySelector(".label-box").textContent = message; }
-          </script>
+        <div class="control_motion_title">
+          Повернуть дом
         </div>
 
       </div>
+      <div class="mouse-area">
+        <!-- оласть реакции на движение мышки для мотания (чтобы не дергалось над панелью управления) -->
+      </div>
+      <div class="door_area door_next">
+        <!-- область двери в сцене (координаты в CSS) -->
+      </div>
     </div>
+
+    <div class="loader">
+      <!-- индикатор загрузки файлов -->
+    </div>
+
+    <!-- DEBUG: индикация режима анимации -->
+    <div class="label-box" style="position: absolute; top: 0vw; left: 60vh; font-size: 18px; color: darkblue;">
+      <script>
+        function LAB(message) { document.querySelector(".label-box").textContent = message; }
+      </script>
+    </div>
+
   </main>
 
   <footer> </footer>

@@ -14,12 +14,9 @@
 html,
 body {
 	width: 100%;
-	margin: 0;
-	padding: 0;
 	font-family: Tahoma, Arial, Verdana, sans-serif;
-	font-size: 1rem;
+	font-size: 16px;
 	line-height: 1.8;
-	color: black;
 }
 
 header {
@@ -29,33 +26,55 @@ header {
 .container {
 	position: relative;
 	margin: 0px auto;
-	width: 100%;
-	max-width: calc(1920/616 * 90vh);
-	height: 90vh;
-	max-height: 100vw;
-	min-height: 308px;
 	padding: 0px;
+	width: 100%;
+	max-width: calc(1920/616 * 90vh - 5px);
+	height: 90vh;
+	max-height: 90vw;
+	min-height: 308px;
+	font-size: 10px;
 	background: url(images/bg.jpg);
 	background-size: cover;
-	background-repeat: no-repeat;
 	border: 1px solid black;
 }
 
-/*@media screen and (orientation: portrait) {*/
+@media screen and (max-height: 308px) {
+	.container {
+		/* calc(1920/2 - 5px) */
+		width: 950px;
+		max-width: none;
+	}
+}
 
 canvas {
-	opacity: 1.0;
+	opacity: 0.8;
 	width: 100%;
 	height: 100%;
 }
 
-.scene {
+.controls {
 	position: absolute;
 	top: 0;
 	left: 0;
 	width: 100%;
 	height: 100%;
 	display: flex;
+	flex-direction: row;
+}
+
+.controls-buttons-area {
+	margin-left: 2vh;
+	width: 42vh;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+@media screen and (max-height: 308px) {
+	.controls-buttons-area {
+		width: 140px;
+	}
 }
 
 .mouse-area {
@@ -63,33 +82,27 @@ canvas {
 	height: 100%;
 }
 
-.controls {
-	width: 12vw;
-	height: 100%;
-	margin-left: 1vw;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	border: 1px solid black;
-}
-
-/**************** общие стили кнопок *************************/
+/**************** стили блоков кнопок *************************/
 .control_decor_house,
 .control_decor_door,
 .control_motion {
-	margin-top: 1.5vw;
+	margin-top: 3vh;
 	display: flex;
+	flex-direction: row;
 	justify-content: space-between;
 	align-items: center;
 }
 
+/**************** общие стили кнопок *************************/
 .decor_house,
 .slider,
 .move_center {
+	height: 9vh;
+	width: 9vh;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	border: 0.25vw solid var(--ctr-color);
+	border: 0.5vh solid var(--ctr-color);
 	border-radius: 50%;
 	cursor: pointer;
 	box-shadow: var(--schadow);
@@ -98,15 +111,14 @@ canvas {
 .decor_house:hover,
 .slider:hover,
 .move_center:hover {
-	border: 0.25vw solid var(--ctr-hover);
+	border: 0.5vh solid var(--ctr-hover);
+	outline: 0.3vh solid var(--ctr-hover);
 }
 
-/****************** сцена-дом (background) ****************************/
+/****************** кнопки дом (background) ****************************/
 .decor_house {
 	position: relative;
-	height: 3.0vw;
-	width: 3.0vw;
-	font-size: 2.2vw;
+	font-size: 5vh;
 	font-weight: 100;
 	color: var(--ctr-active);
 	text-shadow: var(--schadow);
@@ -116,16 +128,13 @@ canvas {
 	content: "\2714";
 }
 
-.slider:hover::after,
 .decor_house:hover::after {
 	position: absolute;
-	left: 0;
-	top: -40%;
+	left: 1vh;
+	top: -5vh;
 	content: attr(data-text);
 	z-index: 1;
-	font-size: 1.0vw;
-	line-height: 1vw;
-	padding: 0px;
+	font-size: 3vh;
 	color: white;
 	text-shadow: var(--schadow);
 }
@@ -137,8 +146,6 @@ canvas {
 /******************* дверь ***************************/
 .slider {
 	justify-content: left;
-	height: 4vw;
-	width: 4vw;
 	background-color: #444;
 	overflow: hidden;
 }
@@ -149,8 +156,8 @@ canvas {
 }
 
 .slider-item {
-	height: 3.8vw;
-	width: 3.8vw;
+	height: 8vh;
+	width: 8vh;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -160,10 +167,21 @@ canvas {
 	height: 70%;
 }
 
+/* примерная область двери в сцене (TODO лучше сделать пиксельный поиск двери через canvas) */
+.door_area {
+	position: absolute;
+	top: 50%;
+	left: 30vw;
+	width: 8vw;
+	height: 33%;
+	cursor: pointer;
+	background-color: white;
+	opacity: 0.3;
+	visibility: visible;
+}
+
 /******************* повороты ***************************/
 .move_center {
-	height: 4vw;
-	width: 4vw;
 	background-color: #444;
 }
 
@@ -174,15 +192,15 @@ canvas {
 /********************* svg стрелки ****************************/
 .arrow {
 	width: 100%;
-	max-width: 2.0vw;
-	max-height: 2.0vw;
+	max-width: 5vh;
+	max-height: 5vh;
 	cursor: pointer;
 }
 
 svg {
 	fill: none;
 	stroke: var(--ctr-color);
-	stroke-width: 0.18vw;
+	stroke-width: 0.5vh;
 	stroke-linecap: round;
 	stroke-linejoin: round;
 	filter: drop-shadow(0px 0px 0.2vw black);
@@ -197,30 +215,18 @@ svg:active polyline {
 	stroke: var(--ctr-active);
 }
 
-/* примерная область двери в сцене (TODO можно сделать пиксельный поиск двери через canvas) */
-.door_area {
-	position: absolute;
-	top: 50%;
-	left: 30vw;
-	width: 8vw;
-	height: 33%;
-	cursor: pointer;
-	opacity: 0.3;
-	visibility: visible;
-}
-
 /**************** подписи к группам кнопок *************************/
 .control_decor_title,
 .control_door_title,
 .control_motion_title {
 	display: box;
-	margin: 0.5vw auto;
-	padding: 0 10px 0;
+	margin: 1vmin auto;
+	padding: 0 2vmin 0;
 	width: fit-content;
-	border-radius: 1vmax;
-	font-size: 0.7vw;
-	font-weight: 800;
-	line-height: 1.2vw;
+	border-radius: 1.5vmin;
+	font-size: 2.5vmin;
+	line-height: 3vmin;
+	font-weight: 600;
 	color: black;
 	background-color: var(--ctr-color);
 	box-shadow: var(--schadow);
@@ -231,15 +237,15 @@ svg:active polyline {
 	position: absolute;
 	top: 50%;
 	left: 50%;
-	height: 10vh;
-	width: 10vh;
+	height: 14vh;
+	width: 14vh;
 	transform: translate(-50%, -50%);
-	border: 1vh solid var(--ctr-color);
-	border-top: 1vh solid #444;
-	border-right: 1vh solid #444;
+	border: 2vh solid white;
+	border-top: 2vh solid #444;
+	border-right: 2vh solid #444;
 	border-radius: 50%;
 	animation: spin 1s linear infinite;
-	visibility: visible;
+	visibility: hidden;
 }
 
 @keyframes spin {
@@ -252,9 +258,9 @@ svg:active polyline {
 	}
 }
 
-/************* вертикальный режим ****************
+/************* вертикальный режим ****************/
 @media screen and (orientation: portrait) {
-	.controls {
+	.controls-buttons-area {
 		visibility: hidden;
 	}
 
@@ -264,8 +270,7 @@ svg:active polyline {
 		left: 61vw;
 		width: 13vw;
 		height: 33%;
-		opacity: 0;
+		opacity: 0.2;
 		visibility: visible;
 	}
 }
-*/

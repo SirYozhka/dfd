@@ -153,7 +153,9 @@ if (MOBILE) {
     document.addEventListener('touchend', (e) => {
         newX = e.changedTouches[0].clientX;
         dX = newX - lastX;
-        if (Math.abs(dX) < 5) return;
+        if (Math.abs(dX) < 5) {
+            return;
+        }
         if (Math.abs(dX) < 30)
             Motion(dX);
         else

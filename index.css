@@ -170,13 +170,13 @@ canvas {
 /* примерная область двери в сцене (TODO лучше сделать пиксельный поиск двери через canvas) */
 .door_area {
 	position: absolute;
-	top: 50%;
-	left: 30vw;
-	width: 8vw;
+	top: 52%;
+	left: 87vh;
+	width: 18vh;
 	height: 33%;
 	cursor: pointer;
 	background-color: white;
-	opacity: 0.3;
+	opacity: 0;
 	visibility: visible;
 }
 
@@ -267,10 +267,8 @@ svg:active polyline {
 	.door_area {
 		position: absolute;
 		top: 50%;
-		left: 61vw;
-		width: 13vw;
+		left: 65vw;
+		width: 16vw;
 		height: 33%;
-		opacity: 0.2;
-		visibility: visible;
 	}
 }

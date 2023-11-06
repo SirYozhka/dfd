@@ -99,16 +99,18 @@
     </script>
   </div>
 
-  <footer> </footer>
-  <!-- DEBUG логирование на экран (отладка загрузки файлов) -->
+  <!-- DEBUG логирование на экран -->
   <div class="log-box">
+    <p>-------- журнал событий --------</p>
     <style>
-      div.log {
+      .log-box {
         position: absolute;
-        top: 400px;
-        right: 2px;
-        width: fit-content;
-        height: calc(100% - 400px);
+        top: 6vh;
+        right: 1vh;
+        width: 200px;
+        min-width: fit-content;
+        height: fit-content;
+        max-height: 80vh;
         padding: 5px;
         overflow: auto;
         background-color: lightgrey;
@@ -130,6 +132,7 @@
     </script>
   </div>
 
+  <footer> </footer>
 </body>
 
 </html>

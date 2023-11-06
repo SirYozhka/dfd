@@ -140,18 +140,16 @@ window.addEventListener("resize", () => setTimeout(() => { resizeScene() }, 100)
 function resizeScene() {
     Doors.initSlider();
     modeVertical = (innerWidth < innerHeight)  //вертикальная ориентация (сверить в .visualViewport если iframe)
-    //let rate = (modeVertical ? 1.2 : img_width / img_height); //соотношение сторон канваса в гориз. или вертик. режимах
-    //    container.style.height = container.offsetWidth / rate + "px"; //подгоняем высоту контейнера
-    canvasSX = Math.round(container.clientHeight * 0.3); //смещение кадра(фона) для вертик режима
+    canvasSX = (modeVertical ? Math.round(container.clientHeight * 0.3) : 0); //смещение кадра(фона) для вертик режима
     let rate = container.clientWidth / container.clientHeight; //соотношение сторон канваса
     canvas.height = img_height; //вертикальное разрешение
     canvas.width = img_height * rate;  //горизонтальное разрешение
     Moving(frame_current);
 }
 
-//мотание TODO 
+//мотание 
 var lastX, newX, dX; //предыдущееи и новое положение мышки/тача
-if (MOBILE) {
+if (MOBILE) { //TODO доработать
     document.addEventListener('touchstart', (e) => {
         lastX = e.changedTouches[0].clientX;
     });
@@ -229,6 +227,7 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
     if (!last) last = first; //если undefined - отобразить только один first кадр
     let direction = (first <= last ? +1 : -1); //направление анимации
 
+    LOG("animation " + first + " " + last + " :" + delay); //debug не срабатывает первы кадр три раза
     animationID = requestAnimationFrame(animate);
     function animate(time) {
         let frame_delay = (delay ? delay_motanie : imgnum[frame_current].delay);
@@ -238,14 +237,13 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
             let S = House.img[frame_current];
             let D = Doors.img[frame_current];
             if (S && D) { //если оба слайда загружены
-                let sx = (modeVertical ? canvasSX : 0); //смещение кадра(фона) для вертик режима
                 if (MOBILE) { //режим background-image (в мобильном режиме быстрее)
                     container.style.background = "url(" + D.src + ") left top / cover";
                     container.style.background += ", url(" + S.src + ") left top / cover";
-                    container.style.backgroundPosition = -sx + "px";
+                    container.style.backgroundPosition = -canvasSX + "px";
                 } else { //режим canvas (можно сделать opacity: 0.8 и добавить фон)
-                    context.drawImage(S, sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
-                    context.drawImage(D, sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+                    context.drawImage(S, canvasSX, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+                    context.drawImage(D, canvasSX, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
                 }
                 frame_current += direction; //примечание: в конце номер будет на 1 отличаться от текущего положения
             } else {
@@ -273,6 +271,7 @@ function StopMoving() {
     amination_started = false;
 }
 
+//todo class
 /*********************** Загрузка кадров ****************************/
 function loadingAll(start, end) { //start, end - номера первого и последнего кадра
     if (!end) end = start; //если задан один параметр - грузим один (start) кадр
@@ -304,42 +303,9 @@ function loadingImages(obj, start, end) { //obj = текущий объект - 
     for (let frm = start; frm <= end; frm++) {
         if (obj.img[frm] != undefined) { loader.upd(-1); continue; } //если уже загружен (=image) или грузится (= 0)
         obj.img[frm] = 0; //флаг - ставим файл в загрузку
-        let fname = "./scene/" + obj.fld + "_" + obj.sub + "/" + imgnum[frm].image + obj.ext;
-        let image = new Image();
-        image.src = fname; //загрузка изображения
-        image.onload = () => {
-            obj.img[frm] = image; //загрузка в массив House или Doors
-            loader.upd(-1);
-            //LOG(image.src);
-        }
-        image.onerror = () => {
-            loader.upd(- 1);
-        }
+        obj.img[frm] = new Image();
+        obj.img[frm].src = "./scene/" + obj.fld + "_" + obj.sub + "/" + imgnum[frm].image + obj.ext; //загрузка изображения
+        obj.img[frm].onload = () => loader.upd(-1);
+        obj.img[frm].onerror = () => loader.upd(-1);
     }
-}
-
-//********** вычисление области двери *****************************
-//в файле PNG пиксели двери > 0  (остальная область - прозрачная)
-function scan(pic) {
-    let mask_canvas = document.createElement('canvas');
-    let mask_context = mask_canvas.getContext('2d');
-    mask_canvas.width = pic.width / 4;
-    mask_canvas.height = pic.height / 4;
-
-    mask_context.drawImage(pic, 0, 0, mask_canvas.width, mask_canvas.height);
-    let P = mask_context.getImageData(0, 0, mask_canvas.width, mask_canvas.height);
-
-    let x1, y1;
-    let w, h;
-    let bg = true;
-    for (let x = 0; x < mask_canvas.width / 2; x++)
-        for (let y = 0; y < mask_canvas.height; y++) {
-            let num = (y * mask_canvas.width + x) * 4;
-            if (P.data[num + 3] > 0) { //не пустая часть = дверь
-                x1 = x;
-                y1 = y;
-                break;
-            }
-        }
-    return { x: x1, y: y1, w: (x2 - x1), h: (y2 - y1) };
 }

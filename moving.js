@@ -71,7 +71,8 @@ class HouseObject {
         this.img = []; //очистил массив изображений...
         loadingImages(House, frame_start, frame_end);  //предзагрузка кадров текущего мотания
         loadingImages(House, frame_start - frames_povorot, frame_end + frames_povorot); //предзагрузка кадров поворота 
-        window.setTimeout(() => { Moving(frame_current) }, 100);
+        if (i)
+            window.setTimeout(() => { Moving(frame_current) }, 100);
     }
 }
 
@@ -110,7 +111,8 @@ class DoorsObject {
         this.img = []; //обнулить массив изображений
         loadingImages(Doors, frame_start, frame_end);  //предзагрузка кадров текущего мотания
         loadingImages(Doors, frame_start - frames_povorot, frame_end + frames_povorot); //предзагрузка кадров поворота 
-        window.setTimeout(() => { Moving(frame_current) }, 100);
+        if (dir)
+            window.setTimeout(() => { Moving(frame_current) }, 100);
     }
     hide(m) { //блок клацанья по двери в сцене включать только для центральных кадров (где видна дверь)
         if (m) this.doorarea.style.display = "block";
@@ -156,16 +158,11 @@ if (MOBILE) { //TODO доработать
     document.addEventListener('touchend', (e) => {
         newX = e.changedTouches[0].clientX;
         dX = newX - lastX;
-        if (Math.abs(dX) < 5) {
-            return;
-        }
-        if (Math.abs(dX) < 30)
-            Motion(dX);
+        if (Math.abs(dX) < 5) return;
+        if (Math.abs(dX) < 30) Motion(dX);
         else
-            if (dX < 0)
-                MoveForward();
-            else
-                MoveBackward();
+            if (dX < 0) MoveForward();
+            else MoveBackward();
     });
 } else
     mouse_area.addEventListener("mousemove", (e) => {
@@ -177,7 +174,7 @@ if (MOBILE) { //TODO доработать
     });
 
 function Motion(dir) {
-    if (amination_started || !dir) return; //не реагировать если в процессе поворота или нет перемещения
+    if (amination_started || !dir) return; //не реагировать если в процессе поворота или нет перемещения по Х
     if (Math.abs(dir) > 3) { //переместили мышь/тач более чем на 3 пиксела
         if (dir > 0)
             Moving(frame_start, frame_end, delay_motanie);
@@ -227,8 +224,8 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
     if (!last) last = first; //если undefined - отобразить только один first кадр
     let direction = (first <= last ? +1 : -1); //направление анимации
 
-    LOG("animation " + first + " " + last + " :" + delay); //debug не срабатывает первы кадр три раза
     animationID = requestAnimationFrame(animate);
+
     function animate(time) {
         let frame_delay = (delay ? delay_motanie : imgnum[frame_current].delay);
         if (time - time_start > frame_delay) {
@@ -242,8 +239,12 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
                     container.style.background += ", url(" + S.src + ") left top / cover";
                     container.style.backgroundPosition = -canvasSX + "px";
                 } else { //режим canvas (можно сделать opacity: 0.8 и добавить фон)
-                    context.drawImage(S, canvasSX, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
-                    context.drawImage(D, canvasSX, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+                    try {
+                        context.drawImage(S, canvasSX, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+                        context.drawImage(D, canvasSX, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+                    } catch (e) {
+                        console.log("error canvas: " + e);
+                    }
                 }
                 frame_current += direction; //примечание: в конце номер будет на 1 отличаться от текущего положения
             } else {
@@ -303,9 +304,12 @@ function loadingImages(obj, start, end) { //obj = текущий объект - 
     for (let frm = start; frm <= end; frm++) {
         if (obj.img[frm] != undefined) { loader.upd(-1); continue; } //если уже загружен (=image) или грузится (= 0)
         obj.img[frm] = 0; //флаг - ставим файл в загрузку
-        obj.img[frm] = new Image();
-        obj.img[frm].src = "./scene/" + obj.fld + "_" + obj.sub + "/" + imgnum[frm].image + obj.ext; //загрузка изображения
-        obj.img[frm].onload = () => loader.upd(-1);
-        obj.img[frm].onerror = () => loader.upd(-1);
+        let image = new Image();
+        image.src = "./scene/" + obj.fld + "_" + obj.sub + "/" + imgnum[frm].image + obj.ext; //загрузка изображения
+        image.onload = () => {
+            obj.img[frm] = image;
+            loader.upd(-1);
+        }
+        image.onerror = () => loader.upd(-1);
     }
 }

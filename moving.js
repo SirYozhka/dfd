@@ -27,6 +27,7 @@ var amination_started = false; //флаг, true - анимация происх�
 
 var House; //class - объект домиков/backgroumd
 var Doors; //class - объект дверей/object (слайдер, изменение)
+var Load; //class - объект загрузки файлов
 
 const container = document.querySelector(".container"); //контейнер всей сцены
 const canvas = document.querySelector("canvas");
@@ -42,7 +43,7 @@ class HouseObject {
     constructor(params) {
         this.img = []; //массив Image объектов изображений двери (фреймов)
         this.fld = params.folder || "background";
-        this.sub = params.sub || "1";
+        this.sub = params.sub - 1 || 0; //тут нумерация с НУЛЯ !!!
         this.ext = ".jpg";
         this.arr_houses = [
             { src: "fence_color_yellow.png", name: "Сосна" }, //prefix: "_1"
@@ -57,22 +58,27 @@ class HouseObject {
             decor_house.style.background = "url(images/fence_color/" + this.arr_houses[i].src + ") left top / cover no-repeat";
             decor_house.setAttribute("data-text", this.arr_houses[i].name);
         };
-        this.list_houses = document.querySelectorAll('.decor_house'); //выбора дома
-        this.list_houses.forEach((b, i) => b.addEventListener('click', () => { this.check(i) }));
-        mouse_area.addEventListener('click', () => { this.check(this.sub); });
+        this.list_houses = document.querySelectorAll('.decor_house');
+        this.list_houses.forEach((btn, i) => btn.addEventListener('click', () => { this.check(i) }));
+        mouse_area.addEventListener('click', () => {
+            this.list_houses[this.sub].removeAttribute("data-selected");
+            this.sub++;
+            if (this.sub > this.arr_houses.length - 1) this.sub = 0;
+            this.check(this.sub);
+        });
     }
-    check(i) { //нумерация с нуля todo - исправить?
-        if (i == undefined) i = this.sub - 1; //для начальной инициализации todo упростить
-        if (i > this.arr_houses.length - 1) i = 0;
-        this.list_houses[this.sub - 1].removeAttribute("data-selected");
-        this.list_houses[i].setAttribute("data-selected", null);
-        document.querySelector(".control_decor_title span").textContent = this.arr_houses[i].name;
-        this.sub = i + 1; //т.к. нумерация с нуля
-        this.img = []; //очистил массив изображений...
-        loadingImages(House, frame_start, frame_end);  //предзагрузка кадров текущего мотания
-        loadingImages(House, frame_start - frames_povorot, frame_end + frames_povorot); //предзагрузка кадров поворота 
-        if (i)
-            window.setTimeout(() => { Moving(frame_current) }, 100);
+    init() {
+        this.list_houses[this.sub].setAttribute("data-selected", null);
+        document.querySelector(".control_decor_title span").textContent = this.arr_houses[this.sub].name;
+        Load.images(House, frame_start, frame_end);  //предзагрузка кадров текущего мотания
+        Load.images(House, frame_start - frames_povorot, frame_end + frames_povorot); //предзагрузка кадров поворота 
+    }
+    check(new_sub) {
+        this.list_houses[this.sub].removeAttribute("data-selected");
+        this.sub = new_sub;
+        this.img = []; //очистка массива изображений
+        this.init();
+        window.setTimeout(() => { Moving(frame_current) }, 100);
     }
 }
 
@@ -81,17 +87,18 @@ class DoorsObject {
     constructor(params) {
         this.img = []; //массив  Image объектов изображений двери (фреймов)
         this.fld = params.folder || "object";
-        this.sub = params.sub || "1";
+        this.sub = params.sub - 1 || 0; //нумерация с НУЛЯ !!!
         this.ext = ".png";
         this.slider = document.querySelector('.slider');
         this.sliderLine = document.querySelector('.slider-line');
         this.sliderNumb = document.querySelectorAll('.slider-item').length;
         this.sliderWidth;
         this.doorarea = document.querySelector(".door_area");
+        this.title = document.querySelector(".control_door_title span")
         document.querySelector(".door_prev").addEventListener("click",
             () => { this.check(-1) });
-        document.querySelectorAll('.door_next').forEach(
-            (button) => button.addEventListener('click', () => { this.check(+1) }));
+        document.querySelectorAll('.door_next').forEach((button) => button.addEventListener('click',
+            () => { this.check(+1) }));
     }
     initSlider() {
         this.sliderWidth = this.slider.clientWidth;
@@ -99,20 +106,21 @@ class DoorsObject {
         this.roll();
     }
     roll() {
-        this.sliderLine.style.transform = 'translate(-' + (this.sub - 1) * this.sliderWidth + 'px)';
+        this.sliderLine.style.transform = 'translate(-' + this.sub * this.sliderWidth + 'px)';
     }
-    check(dir) {
-        if (!dir) dir = 0;
-        this.sub += dir;
-        if (this.sub < 1) this.sub = 3;
-        if (this.sub > 3) this.sub = 1;
-        document.querySelector(".control_door_title span").textContent = this.sub;
+    init() {
         this.roll();
+        this.title.textContent = this.sub;
+        Load.images(Doors, frame_start, frame_end);  //предзагрузка кадров текущего мотания
+        Load.images(Doors, frame_start - frames_povorot, frame_end + frames_povorot); //предзагрузка кадров поворота 
+    }
+    check(dir) { // if (!dir) dir = 0;
+        this.sub += dir;
+        if (this.sub < 0) this.sub = 2;
+        if (this.sub > 2) this.sub = 0;
         this.img = []; //обнулить массив изображений
-        loadingImages(Doors, frame_start, frame_end);  //предзагрузка кадров текущего мотания
-        loadingImages(Doors, frame_start - frames_povorot, frame_end + frames_povorot); //предзагрузка кадров поворота 
-        if (dir)
-            window.setTimeout(() => { Moving(frame_current) }, 100);
+        this.init();
+        window.setTimeout(() => { Moving(frame_current) }, 100);
     }
     hide(m) { //блок клацанья по двери в сцене включать только для центральных кадров (где видна дверь)
         if (m) this.doorarea.style.display = "block";
@@ -130,10 +138,11 @@ window.addEventListener("load", () => {
         let del = (chet ? delay_povorot : delay_motanie_fast); //задержка кадра в зависимости от номера кадра
         imgnum[frm] = { image: img, delay: del }; //каждому кадру соответствует номер изображения и задержка анимации
     }
+    Load = new Loader();
     House = new HouseObject({ folder: "background", sub: "1" });
-    House.check();
+    House.init();
     Doors = new DoorsObject({ folder: "object", sub: "1" });
-    Doors.check();
+    Doors.init();
     resizeScene();
 });
 
@@ -141,11 +150,10 @@ window.addEventListener("load", () => {
 window.addEventListener("resize", () => setTimeout(() => { resizeScene() }, 100));
 function resizeScene() {
     Doors.initSlider();
-    modeVertical = (innerWidth < innerHeight)  //вертикальная ориентация (сверить в .visualViewport если iframe)
+    modeVertical = (innerWidth < innerHeight)  //вертикальная ориентация (если iframe надо бы .visualViewport )
     canvasSX = (modeVertical ? Math.round(container.clientHeight * 0.3) : 0); //смещение кадра(фона) для вертик режима
-    let rate = container.clientWidth / container.clientHeight; //соотношение сторон канваса
     canvas.height = img_height; //вертикальное разрешение
-    canvas.width = img_height * rate;  //горизонтальное разрешение
+    canvas.width = img_height * (container.clientWidth / container.clientHeight);  //горизонтальное разрешение
     Moving(frame_current);
 }
 
@@ -191,7 +199,7 @@ function MoveForward() {
     if (frame_end < frame_total) {
         frame_start += n_pm; //старт следующего мотания
         frame_end += n_pm; //конец следующего мотания
-        loadingAll(frame_start, frame_end + frames_povorot); //загрузка следующего мотания!
+        Load.all(frame_start, frame_end + frames_povorot); //загрузка следующего мотания!
     }
 };
 
@@ -203,7 +211,7 @@ function MoveBackward() {
     if (1 < frame_start) {
         frame_start -= n_pm; //старт следующего мотания
         frame_end -= n_pm; //конец следующего мотания
-        loadingAll(frame_start - frames_povorot, frame_end); //загрузка следующего мотания!
+        Load.all(frame_start - frames_povorot, frame_end); //загрузка следующего мотания!
     }
 };
 
@@ -249,7 +257,7 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
                 frame_current += direction; //примечание: в конце номер будет на 1 отличаться от текущего положения
             } else {
                 //ждём когда загрузится нужный кадр (если ещё не загрузился)
-                loadingAll(frame_current); //на всяк случай кидаем этот кадр в загрузку
+                Load.all(frame_current); //на всяк случай кидаем этот кадр в загрузку
                 error_timer++;
                 if (error_timer > 500) {  //если кадр таки не загрузится
                     console.log("error animation frame:" + frame_current + " not found!");
@@ -272,44 +280,44 @@ function StopMoving() {
     amination_started = false;
 }
 
-//todo class
-/*********************** Загрузка кадров ****************************/
-function loadingAll(start, end) { //start, end - номера первого и последнего кадра
-    if (!end) end = start; //если задан один параметр - грузим один (start) кадр
-    loadingImages(House, start, end);   //загрузка кадров домика
-    loadingImages(Doors, start, end);   //загрузка кадров двери
-}
-
-class LoaderIndicator { //индикатор загрузки
+/************* CLASS загрузка файлов и индикация загрузки **************/
+class Loader {
     constructor() {
         this.count = 0; // счётчик запущеных загрузок файлов
         this.div_ind = document.querySelector(".loader");
     }
-    upd(dif) {
-        this.loader_count += dif;
-        if (this.loader_count > 0)
+    all(start, end) { //start, end - номера первого и последнего кадра
+        if (!end) end = start; //если задан один параметр - грузим один (start) кадр
+        this.images(House, start, end);   //загрузка кадров домика
+        this.images(Doors, start, end);   //загрузка кадров двери
+    }
+    images(obj, start, end) { //obj = текущий объект - House или Doors
+        if (end > frame_total) end = frame_total; //foolproof ограничить верхний предел
+        if (start < 0) start = 1; //foolproof ограничить нижний предел
+        this.display(end - start + 1);  //добавить в счетчик новые кадры
+        for (let frm = start; frm <= end; frm++) {
+            if (obj.img[frm] != undefined) { //если уже загружен (=image) или грузится (= 0)
+                Load.display(-1);
+                continue;
+            }
+            obj.img[frm] = 0; //флаг - ставим файл в загрузку
+            let image = new Image();
+            image.src = "./scene/" + obj.fld + "_" + (obj.sub + 1) + "/" + imgnum[frm].image + obj.ext; //загрузка изображения
+            image.onload = () => {
+                obj.img[frm] = image;
+                this.display(-1);
+            }
+            image.onerror = () =>
+                this.display(-1);
+        }
+    }
+    display(dif) {
+        this.count += dif;
+        if (this.count > 0)
             this.div_ind.style.visibility = "visible";
         else {
             this.div_ind.style.visibility = "hidden";
-            this.loader_count = 0; //на всякий случай
+            this.count = 0; //на всякий случай
         }
-    }
-}
-var loader = new LoaderIndicator();
-
-function loadingImages(obj, start, end) { //obj = текущий объект - House или Doors
-    if (end > frame_total) end = frame_total; //foolproof ограничить верхний предел
-    if (start < 0) start = 1; //foolproof ограничить нижний предел
-    loader.upd(end - start + 1);  //добавить в счетчик новые кадры
-    for (let frm = start; frm <= end; frm++) {
-        if (obj.img[frm] != undefined) { loader.upd(-1); continue; } //если уже загружен (=image) или грузится (= 0)
-        obj.img[frm] = 0; //флаг - ставим файл в загрузку
-        let image = new Image();
-        image.src = "./scene/" + obj.fld + "_" + obj.sub + "/" + imgnum[frm].image + obj.ext; //загрузка изображения
-        image.onload = () => {
-            obj.img[frm] = image;
-            loader.upd(-1);
-        }
-        image.onerror = () => loader.upd(-1);
     }
 }

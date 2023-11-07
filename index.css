@@ -29,9 +29,7 @@ header {
 	padding: 0px;
 	width: 100%;
 	max-width: calc(1920/616 * 90vh - 5px);
-	height: 90vh;
-	max-height: 90vw;
-	min-height: 308px;
+	height: clamp(308px, 90vh, 90vw);
 	font-size: 10px;
 	background: url(images/bg.jpg);
 	background-size: cover;
@@ -40,8 +38,7 @@ header {
 
 @media screen and (max-height: 308px) {
 	.container {
-		/* calc(1920/2 - 5px) */
-		width: 950px;
+		width: calc(1920px / 2 - 5px);
 		max-width: none;
 	}
 }
@@ -99,6 +96,8 @@ canvas {
 .move_center {
 	height: 9vh;
 	width: 9vh;
+	min-height: 30px;
+	min-width: 30px;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -158,6 +157,8 @@ canvas {
 .slider-item {
 	height: 8vh;
 	width: 8vh;
+	min-height: 30px;
+	min-width: 30px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -191,19 +192,19 @@ canvas {
 
 /********************* svg стрелки ****************************/
 .arrow {
-	width: 100%;
-	max-width: 5vh;
-	max-height: 5vh;
+	width: 20%;
+	max-width: 40px;
+	min-width: 25px;
 	cursor: pointer;
 }
 
 svg {
 	fill: none;
 	stroke: var(--ctr-color);
-	stroke-width: 0.5vh;
+	stroke-width: 0.2em;
 	stroke-linecap: round;
 	stroke-linejoin: round;
-	filter: drop-shadow(0px 0px 0.2vw black);
+	filter: drop-shadow(0px 0px 0.3em black);
 	transition: stroke 0.4s ease-in-out;
 }
 
@@ -220,12 +221,12 @@ svg:active polyline {
 .control_door_title,
 .control_motion_title {
 	display: box;
-	margin: 1vmin auto;
-	padding: 0 2vmin 0;
+	margin: 2vh auto;
+	padding: 0 1em 0;
 	width: fit-content;
-	border-radius: 1.5vmin;
-	font-size: 2.5vmin;
-	line-height: 3vmin;
+	border-radius: 0.6em;
+	font-size: 0.9em;
+	line-height: 1.2em;
 	font-weight: 600;
 	color: black;
 	background-color: var(--ctr-color);

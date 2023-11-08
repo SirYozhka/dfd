@@ -21,6 +21,7 @@ body {
 
 header {
 	height: 5vh;
+	min-height: 20px;
 }
 
 .container {
@@ -64,6 +65,7 @@ canvas {
 	width: 42vh;
 	height: 100%;
 	display: flex;
+	font-size: 11px;
 	flex-direction: column;
 	justify-content: center;
 }
@@ -71,6 +73,7 @@ canvas {
 @media screen and (max-height: 308px) {
 	.controls-buttons-area {
 		width: 140px;
+		font-size: 10px;
 	}
 }
 
@@ -133,7 +136,7 @@ canvas {
 	top: -5vh;
 	content: attr(data-text);
 	z-index: 1;
-	font-size: 3vh;
+	font-size: 2.5vh;
 	color: white;
 	text-shadow: var(--schadow);
 }
@@ -238,14 +241,14 @@ svg:active polyline {
 	position: absolute;
 	top: 50%;
 	left: 50%;
+	transform: translate(-50%, -50%);
 	height: 14vh;
 	width: 14vh;
-	transform: translate(-50%, -50%);
 	border: 2vh solid white;
 	border-top: 2vh solid #444;
-	border-right: 2vh solid #444;
 	border-radius: 50%;
 	animation: spin 1s linear infinite;
+	backdrop-filter: blur(10px);
 	visibility: hidden;
 }
 

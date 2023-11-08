@@ -5,8 +5,8 @@
 const MOBILE = (navigator.maxTouchPoints > 0) && ('orientation' in window) // mobile : desktop
 //TODO нужна доп проверка (можно включить тачскрин на ноуте и поставить верт ориентацию)
 
-const img_width = 1920;
-const img_height = 616;
+const img_width = 1920; // (px)
+const img_height = 616; // (px)
 const img_total = 120 //количество изображений в каталоге
 
 const delay_povorot = 50; //задержка кадров поворота (ms) p.s. при fps = 60 минимально выходит 16.67 ms
@@ -29,11 +29,11 @@ var House; //class - объект домиков/backgroumd
 var Doors; //class - объект дверей/object (слайдер, изменение)
 var Load; //class - объект загрузки файлов
 
-const container = document.querySelector(".container"); //контейнер всей сцены
-const canvas = document.querySelector("canvas");
-var context = canvas.getContext("2d");
-var modeVertical = false;  // true - вертикальная ориентация, false - горизонтальный режим
+var container; //контейнер всей сцены
+var canvas; //элемент канвас
+var context; //содержание канвас
 var canvasSX; //смещение кадра(фона) для вертик режима
+var modeVertical = false;  // true - вертикальная ориентация, false - горизонтальный режим
 
 const mouse_area = document.querySelector(".mouse-area"); //область реакции на мышку
 
@@ -131,13 +131,16 @@ class DoorsObject {
 // инициализация при загрузке 
 window.addEventListener("load", () => {
     //TODO можно попробовать решить вопрос с переходом через ноль прямо в функции Moving()
-    for (let frm = 1; frm <= frame_total; frm++) { //начало=0, конец +1, так как в анимации может выскочить undefined
+    for (let frm = 1; frm <= frame_total; frm++) {
         let center = (frame_total - frames_motanie) / 2; //надо правильно рассчитать центровой кадр
         let img = (frm > center ? frm - center : frm + center);
         let chet = ~~(~~(frm / 15) % 2); // ~~ целая часть  % остаток от деления
         let del = (chet ? delay_povorot : delay_motanie_fast); //задержка кадра в зависимости от номера кадра
         imgnum[frm] = { image: img, delay: del }; //каждому кадру соответствует номер изображения и задержка анимации
     }
+    container = document.querySelector(".container"); //контейнер всей сцены
+    canvas = document.querySelector("canvas"); //элемент канвас
+    context = canvas.getContext("2d"); //содержание канвас
     Load = new Loader();
     House = new HouseObject({ folder: "background", sub: "1" });
     House.init();

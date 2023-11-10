@@ -259,7 +259,7 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
                     context.clearRect(0, 0, canvas.width, canvas.height);
                     try {
                         let rr = frame_current * 5; //todo кривовато, должно поворачиваться на разный угол
-                        context.drawImage(bgr, rr, 0, bgr.width / 2, bgr.height, 0, 0, canvas.width, canvas.height);
+                        context.drawImage(bgr, bgr.width / 2 - rr, 0, bgr.width / 2, bgr.height, 0, 0, canvas.width, canvas.height);
 
                         bcontext.drawImage(H, img_sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
                         let frame = bcontext.getImageData(0, 0, canvas.width, canvas.height);

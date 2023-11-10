@@ -30,9 +30,11 @@ var Doors; //class - объект дверей/object (слайдер, изме�
 var Load; //class - объект загрузки файлов
 
 var container; //контейнер всей сцены
-var canvas; //элемент канвас
-var context; //содержание канвас
-var canvasSX; //смещение кадра(фона) для вертик режима
+var canvas; //канвас
+var context; //контекст канвас
+var bcanvas; //буферный канвас
+var bcontext; //контекст буферного канваса
+var img_sx; //смещение кадра(фона) для вертик режима
 var modeVertical = false;  // true - вертикальная ориентация, false - горизонтальный режим
 
 const mouse_area = document.querySelector(".mouse-area"); //область реакции на мышку
@@ -129,6 +131,7 @@ class DoorsObject {
 }
 
 // инициализация при загрузке 
+var bgr = new Image();
 window.addEventListener("load", () => {
     //TODO можно попробовать решить вопрос с переходом через ноль прямо в функции Moving()
     for (let frm = 1; frm <= frame_total; frm++) {
@@ -140,13 +143,16 @@ window.addEventListener("load", () => {
     }
     container = document.querySelector(".container"); //контейнер всей сцены
     canvas = document.querySelector("canvas"); //элемент канвас
-    context = canvas.getContext("2d"); //содержание канвас
+    context = canvas.getContext("2d", { willReadFrequently: true }); //содержание канвас
+    bcanvas = new OffscreenCanvas(img_width, img_height);
+    bcontext = bcanvas.getContext("2d", { willReadFrequently: true });
     Load = new Loader();
     House = new HouseObject({ folder: "background", sub: "1" });
     House.init();
     Doors = new DoorsObject({ folder: "object", sub: "1" });
     Doors.init();
     resizeScene();
+    bgr.src = "./images/bgr.jpg";
 });
 
 // resize сцены
@@ -154,7 +160,7 @@ window.addEventListener("resize", () => setTimeout(() => { resizeScene() }, 100)
 function resizeScene() {
     Doors.initSlider();
     modeVertical = (innerWidth < innerHeight)  //вертикальная ориентация (если iframe надо бы .visualViewport )
-    canvasSX = (modeVertical ? Math.round(container.clientHeight * 0.3) : 0); //смещение кадра(фона) для вертик режима
+    img_sx = (modeVertical ? Math.round(container.clientHeight * 0.3) : 0); //смещение кадра(фона) для вертик режима
     canvas.height = img_height; //вертикальное разрешение
     canvas.width = img_height * (container.clientWidth / container.clientHeight);  //горизонтальное разрешение
     Moving(frame_current);
@@ -170,7 +176,7 @@ if (MOBILE) { //TODO доработать
         newX = e.changedTouches[0].clientX;
         dX = newX - lastX;
         if (Math.abs(dX) < 5) return;
-        if (Math.abs(dX) < 30) Motion(dX);
+        if (Math.abs(dX) < innerWidth / 3) Motion(dX);
         else
             if (dX < 0) MoveForward();
             else MoveBackward();
@@ -242,17 +248,33 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
         if (time - time_start > frame_delay) {
             time_start = time;
             LAB(`${(MOBILE ? "mobile" : "desktop")} | ${imgnum[frame_current].image}.jpg | ${frame_delay}ms`); //DEBUG
-            let S = House.img[frame_current];
+            let H = House.img[frame_current];
             let D = Doors.img[frame_current];
-            if (S && D) { //если оба слайда загружены
+            if (H && D) { //если оба слайда загружены
                 if (MOBILE) { //режим background-image (в мобильном режиме быстрее)
                     container.style.background = "url(" + D.src + ") left top / cover";
-                    container.style.background += ", url(" + S.src + ") left top / cover";
-                    container.style.backgroundPosition = -canvasSX + "px";
+                    container.style.background += ", url(" + H.src + ") left top / cover";
+                    container.style.backgroundPosition = -img_sx + "px";
                 } else { //режим canvas (можно сделать opacity: 0.8 и добавить фон)
+                    context.clearRect(0, 0, canvas.width, canvas.height);
                     try {
-                        context.drawImage(S, canvasSX, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
-                        context.drawImage(D, canvasSX, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+                        let rr = frame_current * 5; //todo кривовато, должно поворачиваться на разный угол
+                        context.drawImage(bgr, rr, 0, bgr.width / 2, bgr.height, 0, 0, canvas.width, canvas.height);
+
+                        bcontext.drawImage(H, img_sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+                        let frame = bcontext.getImageData(0, 0, canvas.width, canvas.height);
+                        let l = frame.data.length / 4; //каждый пиксель четыре бита (rgba)
+                        for (let i = 0; i < l; i++) { //перебор всех пикселей
+                            let r = frame.data[i * 4 + 0];
+                            let g = frame.data[i * 4 + 1];
+                            let b = frame.data[i * 4 + 2];
+                            if (r > 120 && g > 120 && b > 120) //выбор светлого фона (за забором)
+                                frame.data[i * 4 + 3] = 0; //обнуления альфа-канала
+                        }
+                        bcontext.putImageData(frame, 0, 0);
+
+                        context.drawImage(bcanvas, 0, 0);
+                        context.drawImage(D, img_sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
                     } catch (e) {
                         console.log("error canvas: " + e);
                     }

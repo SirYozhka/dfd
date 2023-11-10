@@ -131,7 +131,7 @@ class DoorsObject {
 }
 
 // инициализация при загрузке 
-var bgr = new Image();
+var bgr = document.querySelector(".img-bgr");
 window.addEventListener("load", () => {
     //TODO можно попробовать решить вопрос с переходом через ноль прямо в функции Moving()
     for (let frm = 1; frm <= frame_total; frm++) {
@@ -152,7 +152,6 @@ window.addEventListener("load", () => {
     Doors = new DoorsObject({ folder: "object", sub: "1" });
     Doors.init();
     resizeScene();
-    bgr.src = "./images/bgr.jpg";
 });
 
 // resize сцены
@@ -298,12 +297,12 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
         }
     };
 }
-
 function StopMoving() {
     cancelAnimationFrame(animationID);
     Doors.hide(60 < frame_current && frame_current < 76);
     amination_started = false;
 }
+
 
 /************* CLASS загрузка файлов и индикация загрузки **************/
 class Loader {

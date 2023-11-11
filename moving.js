@@ -257,28 +257,11 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
                     container.style.background += ", url(" + H.src + ") left top / cover";
                     container.style.backgroundPosition = -img_sx + "px";
                 } else { //режим canvas
+                    FrameRender(H, D)
                     //context.clearRect(0, 0, canvas.width, canvas.height);
-                    try {
-                        bgr_sx += direction * (frame_delay < 40 ? 2 : 5); //px - угол поворота фона
-                        context.drawImage(bgr, bgr.width / 6 - bgr_sx, 0, bgr.width / 2, bgr.height, 0, 0, canvas.width, canvas.height);
-
-                        buffer_ctx.drawImage(H, img_sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
-                        let frame = buffer_ctx.getImageData(0, 0, canvas.width, canvas.height);
-                        let l = frame.data.length / 4; //каждый пиксель четыре бита (rgba)
-                        for (let i = 0; i < l; i++) { //перебор всех пикселей
-                            let r = frame.data[i * 4 + 0];
-                            let g = frame.data[i * 4 + 1];
-                            let b = frame.data[i * 4 + 2];
-                            if (r > 120 && g > 120 && b > 120) //выбор светлого фона (за забором)
-                                frame.data[i * 4 + 3] = 0; //обнуления альфа-канала
-                        }
-                        buffer_ctx.putImageData(frame, 0, 0);
-                        buffer_ctx.drawImage(D, img_sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
-
-                        context.drawImage(buffer_canvas, 0, 0);
-                    } catch (e) {
-                        console.log("error canvas: " + e);
-                    }
+                    bgr_sx += direction * (frame_delay < 40 ? 1 : 30); //px - угол поворота фона
+                    context.drawImage(bgr, bgr.width / 6 - bgr_sx, 0, canvas.width, bgr.height, 0, 0, canvas.width, canvas.height);
+                    context.drawImage(buffer_canvas, 0, 0);
                 }
                 frame_current += direction; //примечание: в конце номер будет на 1 отличаться от текущего положения
             } else {
@@ -298,6 +281,27 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
             StopMoving();
         }
     };
+
+    function FrameRender(H, D) {
+        try {
+            buffer_ctx.clearRect(0, 0, canvas.width, canvas.height);
+            buffer_ctx.drawImage(H, img_sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+            let frame = buffer_ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let l = frame.data.length / 4; //каждый пиксель четыре бита (rgba)
+            for (let i = 0; i < l; i++) { //перебор всех пикселей
+                let r = frame.data[i * 4 + 0];
+                let g = frame.data[i * 4 + 1];
+                let b = frame.data[i * 4 + 2];
+                if (r > 120 && g > 120 && b > 120) //выбор светлого фона (за забором)
+                    frame.data[i * 4 + 3] = 0; //обнуления альфа-канала
+            }
+            buffer_ctx.putImageData(frame, 0, 0);
+            buffer_ctx.drawImage(D, img_sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+        } catch (e) {
+            console.log("error canvas: " + e);
+        }
+    }
+
 }
 function StopMoving() {
     cancelAnimationFrame(animationID);

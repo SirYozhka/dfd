@@ -231,8 +231,10 @@ document.querySelector(".move_center").addEventListener("click", () => {
     frame_end = 75; //конец первичного мотания
 });
 
+
+var bgr_sx = 0;
 /*************************** АНИМАЦИЯ ********************************/
-function Moving(first, last, delay) { //first - первый кадр, last - последений кадр
+function Moving(first, last, delay) { //first - первый кадр, last - последений кадр, delay - задержка кадра
     if (amination_started) return; //блокирование повторного запуска анимации
     else amination_started = true;
     let time_start = performance.now(); //время старта отрисовки кадра
@@ -250,15 +252,15 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
             let H = House.img[frame_current];
             let D = Doors.img[frame_current];
             if (H && D) { //если оба слайда загружены
-                if (MOBILE) { //режим background-image (в мобильном режиме быстрее)
+                if (MOBILE) { //режим background-image (в мобильном режиме canvas тормозит)
                     container.style.background = "url(" + D.src + ") left top / cover";
                     container.style.background += ", url(" + H.src + ") left top / cover";
                     container.style.backgroundPosition = -img_sx + "px";
-                } else { //режим canvas (можно сделать opacity: 0.8 и добавить фон)
+                } else { //режим canvas
                     context.clearRect(0, 0, canvas.width, canvas.height);
                     try {
-                        let rr = frame_current * 5; //todo кривовато, должно поворачиваться на разный угол
-                        context.drawImage(bgr, bgr.width / 2 - rr, 0, bgr.width / 2, bgr.height, 0, 0, canvas.width, canvas.height);
+                        bgr_sx += direction * (frame_delay < 40 ? 2 : 5); //px - угол поворота фона
+                        context.drawImage(bgr, bgr.width / 6 - bgr_sx, 0, bgr.width / 2, bgr.height, 0, 0, canvas.width, canvas.height);
 
                         bcontext.drawImage(H, img_sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
                         let frame = bcontext.getImageData(0, 0, canvas.width, canvas.height);

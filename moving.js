@@ -32,8 +32,8 @@ var Load; //class - объект загрузки файлов
 var container; //контейнер всей сцены
 var canvas; //канвас
 var context; //контекст канвас
-var bcanvas; //буферный канвас
-var bcontext; //контекст буферного канваса
+var buffer_canvas; //буферный канвас
+var buffer_ctx; //контекст буферного канваса
 var img_sx; //смещение кадра(фона) для вертик режима
 var modeVertical = false;  // true - вертикальная ориентация, false - горизонтальный режим
 
@@ -144,8 +144,8 @@ window.addEventListener("load", () => {
     container = document.querySelector(".container"); //контейнер всей сцены
     canvas = document.querySelector("canvas"); //элемент канвас
     context = canvas.getContext("2d", { willReadFrequently: true }); //содержание канвас
-    bcanvas = new OffscreenCanvas(img_width, img_height);
-    bcontext = bcanvas.getContext("2d", { willReadFrequently: true });
+    buffer_canvas = new OffscreenCanvas(img_width, img_height);
+    buffer_ctx = buffer_canvas.getContext("2d", { willReadFrequently: true });
     Load = new Loader();
     House = new HouseObject({ folder: "background", sub: "1" });
     House.init();
@@ -257,13 +257,13 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
                     container.style.background += ", url(" + H.src + ") left top / cover";
                     container.style.backgroundPosition = -img_sx + "px";
                 } else { //режим canvas
-                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    //context.clearRect(0, 0, canvas.width, canvas.height);
                     try {
                         bgr_sx += direction * (frame_delay < 40 ? 2 : 5); //px - угол поворота фона
                         context.drawImage(bgr, bgr.width / 6 - bgr_sx, 0, bgr.width / 2, bgr.height, 0, 0, canvas.width, canvas.height);
 
-                        bcontext.drawImage(H, img_sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
-                        let frame = bcontext.getImageData(0, 0, canvas.width, canvas.height);
+                        buffer_ctx.drawImage(H, img_sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+                        let frame = buffer_ctx.getImageData(0, 0, canvas.width, canvas.height);
                         let l = frame.data.length / 4; //каждый пиксель четыре бита (rgba)
                         for (let i = 0; i < l; i++) { //перебор всех пикселей
                             let r = frame.data[i * 4 + 0];
@@ -272,10 +272,10 @@ function Moving(first, last, delay) { //first - первый кадр, last - п
                             if (r > 120 && g > 120 && b > 120) //выбор светлого фона (за забором)
                                 frame.data[i * 4 + 3] = 0; //обнуления альфа-канала
                         }
-                        bcontext.putImageData(frame, 0, 0);
+                        buffer_ctx.putImageData(frame, 0, 0);
+                        buffer_ctx.drawImage(D, img_sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
 
-                        context.drawImage(bcanvas, 0, 0);
-                        context.drawImage(D, img_sx, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+                        context.drawImage(buffer_canvas, 0, 0);
                     } catch (e) {
                         console.log("error canvas: " + e);
                     }

@@ -12,74 +12,76 @@ const delay_povorot = 50; //(ms) задержка кадров поворота
 const delay_motanie = 30; //(ms) задержка кадров мотания 
 const delay_motfast = 1; //(ms) задержка кадров мотания при поворотах 
 
-var frame_start = 61; //начальный кадр мотания (изображение 61.jpg)
-var frame_end = 75;   //конечный кадр мотания (изображение 75.jpg)
+var House; // объект домиков/backgroumd (кнопки)
+var Doors; // объект дверей/object (слайдер)
+var Images;// объект загрузки файлов
+var Scene; // объект кадров сцены (анимация)
+var TouchEvents; // объект реакций на пермещение мышки / тача
 
-var House; //class - объект домиков/backgroumd
-var Doors; //class - объект дверей/object (слайдер, изменение)
-var Images; //class - объект загрузки файлов
-var Scene; //class - кадры (повороты)
-
-// инициализация при загрузке 
 window.addEventListener("load", () => {
     Scene = new ClassSceneAnimation();
     Images = new ClassImagesLoader();
     House = new ClassHouseObject({ folder: "background", sub: 1 });
     Doors = new ClassDoorsObject({ folder: "object", sub: 1 });
+    TouchEvents = new ClassMouseTouchEvents();
 });
 
 
-//мотание и повороты в мобилке
-const mouse_area = document.querySelector(".mouse-area"); //область реакции на мышку
-var lastX, newX, offsetX; //предыдущееи и новое положение мышки/тача
-if (MOBILE) {
-    mouse_area.addEventListener('touchstart', (e) => {
-        lastX = e.changedTouches[0].clientX;
-    }, { passive: true });
-    mouse_area.addEventListener('touchend', (e) => {
-        newX = e.changedTouches[0].clientX;
-        offsetX = newX - lastX;
-        if (Math.abs(offsetX) > 100)
-            if (offsetX < 0)
-                Scene.turn_forward();
-            else
-                Scene.turn_backward();
-        else if (Math.abs(offsetX) > 10)
-            Scene.motion(offsetX);
-
-    });
-} else {
-    mouse_area.addEventListener("mousemove", (e) => {
-        newX = e.clientX;
-        if (!lastX) lastX = newX; //инициализация начального положения
-        offsetX = newX - lastX;
-        if (Math.abs(offsetX) > 3)
-            Scene.motion(offsetX);
-        lastX = newX;
-    });
+class ClassMouseTouchEvents { /*********** перемещения мыши / тачпада ***********/
+    mouse_area = document.querySelector(".mouse-area"); //область реакции на мышку
+    lastX;
+    newX;
+    offsetX; //предыдущееи и новое положение мышки/тача
+    constructor() {
+        if (MOBILE) { //мотание и повороты в мобилке
+            this.mouse_area.addEventListener('touchstart', (e) => {
+                this.lastX = e.changedTouches[0].clientX;
+            }, { passive: true });
+            this.mouse_area.addEventListener('touchend', (e) => {
+                this.newX = e.changedTouches[0].clientX;
+                this.offsetX = this.newX - this.lastX;
+                if (Math.abs(offsetX) > 100) //длинный свап - поворот
+                    if (this.offsetX < 0) Scene.turn_forward();
+                    else Scene.turn_backward();
+                else if (Math.abs(this.offsetX) > 10) //которкий свап - мотание
+                    Scene.motion(this.offsetX);
+            });
+        } else { //мотание на компьютере
+            this.mouse_area.addEventListener("mousemove", (e) => {
+                this.newX = e.clientX;
+                if (!this.lastX) this.lastX = this.newX; //инициализация начального положения
+                this.offsetX = this.newX - this.lastX;
+                if (Math.abs(this.offsetX) > 3)
+                    Scene.motion(this.offsetX);
+                this.lastX = this.newX;
+            });
+        }
+    }
 }
 
 
-/************************** CLASS АНИМАЦИЯ ********************************/
-class ClassSceneAnimation {
+class ClassSceneAnimation { /********* АНИМАЦИЯ ******************/
+    container = document.querySelector(".container"); //контейнер всей сцены
+    canvas = document.querySelector("canvas"); // "экранный" канвас
+    context = this.canvas.getContext("2d", { willReadFrequently: true });
+    height = this.canvas.height = img_height; //вертикальное разрешение
+    width; //зависит от параметров экрана
+    animationID; // requestID анимации, для остановки
+    amination_started = false; //флаг, true - анимация происходит в настоящий момент
+    frm_total = images_total + images_motanie; //общее количество кадров + ещё одно мотание в конце
+    frm_period = images_povorot + images_motanie;
+    frm_center = ~~(this.frm_total / 2); //центральный кадр
+    frm_current = this.frm_center; //текущий кадр анимации (при запуске - центр)
+    frm_start = 61; //начальный кадр мотания (изображение 61.jpg)
+    frm_end = 75;   //конечный кадр мотания (изображение 75.jpg)
+    img_sx; //(px) смещение кадра влево (для вертик режима)
+
     constructor() {
-        this.container = document.querySelector(".container"); //контейнер всей сцены
-        this.canvas = document.querySelector("canvas"); // "экранный" канвас
-        this.context = this.canvas.getContext("2d", { willReadFrequently: true });
-        this.height = this.canvas.height = img_height; //вертикальное разрешение
-        this.width; //зависит от параметров экрана
-        this.animationID; // requestID анимации, для остановки
-        this.amination_started = false; //флаг, true - анимация происходит в настоящий момент
-        this.frm_total = images_total + images_motanie; //общее количество кадров + ещё одно мотание в конце
-        this.frm_center = ~~(this.frm_total / 2); //центральный кадр
-        this.frm_current = this.frm_center; //текущий кадр анимации (при запуске - центр)
-        this.frm_period = images_povorot + images_motanie;
-        this.img_sx; //(px) смещение кадра влево (для вертик режима)
         this.imgnum = []; //массив соответствия номера кадра и номера изображения и задержки кадров
         for (let frm = 1; frm <= this.frm_total; frm++) { //TODO решить вопрос с переходом через ноль в функции move()
             let center = images_total / 2; //todo важно правильно рассчитать центровой кадр
             let img = (frm > center ? frm - center : frm + center);
-            let chet = ~~(~~(frm / 15) % 2); //номера кадров поворота todo (15, но нудна формула)  (~~ целая часть  % остаток от деления)
+            let chet = ~~(~~(frm / 15) % 2); //номера кадров поворота todo (15, но нужна формула)
             let del = (chet ? delay_povorot : delay_motfast); //задержка кадра в зависимости от номера кадра
             this.imgnum[frm] = { image: img, delay: del }; //каждому кадру соответствует номер изображения и задержка анимации
         }
@@ -87,8 +89,8 @@ class ClassSceneAnimation {
         document.querySelector(".move_center").addEventListener("click", () => {
             this.stopmove(); //остановить мотание (иначе будет накладка анимаций)
             this.move(this.frm_center);
-            frame_start = 61; //todo старт первичного мотания
-            frame_end = 75; //todo конец первичного мотания
+            this.frm_start = 61; //todo старт первичного мотания
+            this.frm_end = 75; //todo конец первичного мотания
         });
         document.querySelector(".move_forward").addEventListener("click", () => { this.turn_forward() });
         document.querySelector(".move_backward").addEventListener("click", () => { this.turn_backward() });
@@ -97,28 +99,28 @@ class ClassSceneAnimation {
 
     motion(dir) {
         if (dir > 0)
-            this.move(frame_end, delay_motanie);
+            this.move(this.frm_end, delay_motanie);
         else
-            this.move(frame_start, delay_motanie);
+            this.move(this.frm_start, delay_motanie);
     };
 
     turn_forward() { // поворот вперёд 
         this.stopmove(); //остановить мотание (иначе будет накладка анимаций)
-        this.move(frame_end + images_povorot + 1); //анимация мотания до конца + поворот
-        if (frame_end < this.frm_total) {
-            frame_start += this.frm_period; //старт следующего мотания
-            frame_end += this.frm_period; //конец следующего мотания
-            Images.loadall(frame_start, frame_end + images_povorot); //загрузка следующего мотания!
+        this.move(this.frm_end + images_povorot + 1); //анимация мотания до конца + поворот
+        if (this.frm_end < this.frm_total) {
+            this.frm_start += this.frm_period; //старт следующего мотания
+            this.frm_end += this.frm_period; //конец следующего мотания
+            Images.loadall(this.frm_start, this.frm_end + images_povorot); //загрузка следующего мотания!
         }
     };
 
     turn_backward() { // поворот назад 
         this.stopmove(); //остановить мотание (иначе будет накладка анимаций)
-        this.move(frame_start - (images_povorot + 1));
-        if (1 < frame_start) {
-            frame_start -= this.frm_period; //старт следующего мотания
-            frame_end -= this.frm_period; //конец следующего мотания
-            Images.loadall(frame_start - images_povorot, frame_end); //загрузка следующего мотания!
+        this.move(this.frm_start - (images_povorot + 1));
+        if (1 < this.frm_start) {
+            this.frm_start -= this.frm_period; //старт следующего мотания
+            this.frm_end -= this.frm_period; //конец следующего мотания
+            Images.loadall(this.frm_start - images_povorot, this.frm_end); //загрузка следующего мотания!
         }
     };
 
@@ -182,18 +184,20 @@ class ClassSceneAnimation {
 }
 
 
-//***************** CLASS домиков/background *************************/
-class ClassHouseObject {
+class ClassHouseObject {  /*********** домики / background ******************/
+    img = []; //массив Image объектов изображений двери (кадров)
+    fld = "background";
+    sub = 0; // нумерация с НУЛЯ !!!
+    ext = ".jpg";
+    arr_houses = [
+        { src: "fence_color_yellow.png", name: "Сосна" }, //prefix: "_1"
+        { src: "fence_color_brown.png", name: "Лиственница" }, //prefix: "_2"
+        { src: "fence_color_brown_black.png", name: "Палисандр" } //prefix: "_3"
+    ];
+    list_houses;
     constructor(params) {
-        this.img = []; //массив Image объектов изображений двери (фреймов)
-        this.fld = params.folder; // || "background";
-        this.sub = params.sub - 1; // || 0; //тут нумерация с НУЛЯ !!!
-        this.ext = ".jpg";
-        this.arr_houses = [
-            { src: "fence_color_yellow.png", name: "Сосна" }, //prefix: "_1"
-            { src: "fence_color_brown.png", name: "Лиственница" }, //prefix: "_2"
-            { src: "fence_color_brown_black.png", name: "Палисандр" } //prefix: "_3"
-        ];
+        this.fld = params.folder;
+        this.sub = params.sub - 1; // нумерация с НУЛЯ !!!
         //HTML инициализация кнопок изменения декора домика
         for (let i = 0; i < this.arr_houses.length; i++) {
             let decor_house = document.createElement("div");
@@ -215,7 +219,7 @@ class ClassHouseObject {
     init() {
         this.list_houses[this.sub].setAttribute("data-selected", null);
         document.querySelector(".control_decor_title span").textContent = this.arr_houses[this.sub].name;
-        Images.load(this, frame_start - images_povorot, frame_end + images_povorot); //предзагрузка кадров поворотов и мотания
+        Images.load(this, Scene.frm_start - images_povorot, Scene.frm_end + images_povorot); //предзагрузка кадров поворотов и мотания
     }
     check(new_sub) {
         this.list_houses[this.sub].removeAttribute("data-selected");
@@ -227,47 +231,46 @@ class ClassHouseObject {
 }
 
 
-//***************** CLASS дверей/object *************************/
-class ClassDoorsObject {
+class ClassDoorsObject { /*********** двери / object *********************/
+    img = []; //массив  Image объектов изображений двери (кадров)
+    fld = "object";
+    sub = 0;
+    ext = ".png";
+    slider = document.querySelector('.slider');
+    sliderLine = document.querySelector('.slider-line');
+    sliderNumb = document.querySelectorAll('.slider-item').length;
+    sliderWidth;
+    title = document.querySelector(".control_door_title span");
+
     constructor(params) {
-        this.img = []; //массив  Image объектов изображений двери (фреймов)
-        this.fld = params.folder || "object";
-        this.sub = params.sub - 1 || 0; //нумерация с НУЛЯ !!!
-        this.ext = ".png";
-        this.slider = document.querySelector('.slider');
-        this.sliderLine = document.querySelector('.slider-line');
-        this.sliderNumb = document.querySelectorAll('.slider-item').length;
-        this.sliderWidth;
-        this.doorarea = document.querySelector(".door_area");
-        this.title = document.querySelector(".control_door_title span")
+        this.fld = params.folder;
+        this.sub = params.sub - 1; //нумерация с НУЛЯ !!!
         document.querySelector(".door_prev").addEventListener("click",
             () => { this.check(-1) });
         document.querySelectorAll('.door_next').forEach((button) => button.addEventListener('click',
             () => { this.check(+1) }));
-        window.addEventListener("resize", () => this.initSlider());
-        this.init();
+        window.addEventListener("resize", () => this.rollSlider());
+        this.check();
     }
-    initSlider() {
+
+    rollSlider() {
         this.sliderWidth = this.slider.clientWidth;
         this.sliderLine.style.width = this.sliderWidth * this.sliderNumb + 'px';
-        this.rollSlider();
-    }
-    init() {
-        this.initSlider();
-        this.title.textContent = this.sub;
-        Images.load(this, frame_start - images_povorot, frame_end + images_povorot); //предзагрузка кадров поворотов и мотания
-    }
-    rollSlider() {
         this.sliderLine.style.transform = 'translate(-' + this.sub * this.sliderWidth + 'px)';
     }
-    check(dir) { // if (!dir) dir = 0;
+
+    check(dir = 0) { // if (!dir) dir = 0;
         this.sub += dir;
         if (this.sub < 0) this.sub = 2;
         if (this.sub > 2) this.sub = 0;
+        this.rollSlider();
+        this.title.textContent = this.sub + 1;
         this.img = []; //обнулить массив изображений
-        this.init();
+        Images.load(this, Scene.frm_start - images_povorot, Scene.frm_end + images_povorot); //предзагрузка кадров поворотов и мотания
         window.setTimeout(() => { Scene.move() }, 100);
     }
+
+    doorarea = document.querySelector(".door_area");
     display(m) { //блок клацанья по двери в сцене включать только для центральных кадров (где видна дверь)
         if (m) this.doorarea.style.display = "block";
         else this.doorarea.style.display = "none";
@@ -275,9 +278,7 @@ class ClassDoorsObject {
 }
 
 
-/************* CLASS загрузка файлов **************/
-class ClassImagesLoader {
-    constructor() { }
+class ClassImagesLoader { /*************  загрузка файлов ****************/
     loadall(start, end = start) { //start, end - номера первого и последнего кадра (если задан один параметр - грузим один (start) кадр)
         this.load(House, start, end);   //загрузка кадров домика
         this.load(Doors, start, end);   //загрузка кадров двери
@@ -304,9 +305,10 @@ class ClassImagesLoader {
             }
         }
     }
+
     count = 0; // счётчик запущеных загрузок файлов
-    div_ind = document.querySelector(".loader");
-    display(dif) {
+    div_ind = document.querySelector(".load_spinner");
+    display(dif) { //отображение/отключение спиннера загрузки
         this.count += dif;
         if (this.count > 0)
             this.div_ind.style.visibility = "visible";

@@ -1,40 +1,186 @@
 "use strict"; //строгий режим
 
-const MOBILE = (navigator.maxTouchPoints > 0) && ('orientation' in window) // mobile | desktop
 //MOBILE = (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
-//TODO нужна доп проверка (можно включить тачскрин на ноуте и поставить верт ориентацию)
+const MOBILE = (navigator.maxTouchPoints > 0) && ('orientation' in window) // mobile | desktop
 
 const img_width = 1920; // (px)
 const img_height = 616; // (px)
-const img_total = 120 //количество изображений в каталоге
+const images_total = 120 //количество изображений в каталоге
+const images_motanie = 15; //количество кадров мотания
+const images_povorot = 15; //количество кадров поворота
+const delay_povorot = 50; //(ms) задержка кадров поворота
+const delay_motanie = 30; //(ms) задержка кадров мотания 
+const delay_motfast = 1; //(ms) задержка кадров мотания при поворотах 
 
-const delay_povorot = 50; //задержка кадров поворота (ms) p.s. при fps = 60 минимально выходит 16.67 ms
-const delay_motanie = 30; //задержка кадров мотания (ms)
-const delay_motanie_fast = 1; //задержка кадров мотания при поворотах (ms)
-const frames_motanie = 15; //количество кадров мотания
-const frames_povorot = 15; //количество кадров поворота
-const n_pm = frames_povorot + frames_motanie;
-
-var frame_total = img_total + frames_motanie; //общее количество кадров + ещё одно мотание в конце
 var frame_start = 61; //начальный кадр мотания (изображение 61.jpg)
 var frame_end = 75;   //конечный кадр мотания (изображение 75.jpg)
-var frame_center = frame_start + Math.round(frames_motanie / 2);
 
 var House; //class - объект домиков/backgroumd
 var Doors; //class - объект дверей/object (слайдер, изменение)
 var Images; //class - объект загрузки файлов
 var Scene; //class - кадры (повороты)
 
-const mouse_area = document.querySelector(".mouse-area"); //область реакции на мышку
-
 // инициализация при загрузке 
 window.addEventListener("load", () => {
     Scene = new ClassSceneAnimation();
-    Scene.resize();
     Images = new ClassImagesLoader();
     House = new ClassHouseObject({ folder: "background", sub: 1 });
     Doors = new ClassDoorsObject({ folder: "object", sub: 1 });
 });
+
+
+//мотание и повороты в мобилке
+const mouse_area = document.querySelector(".mouse-area"); //область реакции на мышку
+var lastX, newX, offsetX; //предыдущееи и новое положение мышки/тача
+if (MOBILE) {
+    mouse_area.addEventListener('touchstart', (e) => {
+        lastX = e.changedTouches[0].clientX;
+    }, { passive: true });
+    mouse_area.addEventListener('touchend', (e) => {
+        newX = e.changedTouches[0].clientX;
+        offsetX = newX - lastX;
+        if (Math.abs(offsetX) > 100)
+            if (offsetX < 0)
+                Scene.turn_forward();
+            else
+                Scene.turn_backward();
+        else if (Math.abs(offsetX) > 10)
+            Scene.motion(offsetX);
+
+    });
+} else {
+    mouse_area.addEventListener("mousemove", (e) => {
+        newX = e.clientX;
+        if (!lastX) lastX = newX; //инициализация начального положения
+        offsetX = newX - lastX;
+        if (Math.abs(offsetX) > 3)
+            Scene.motion(offsetX);
+        lastX = newX;
+    });
+}
+
+
+/************************** CLASS АНИМАЦИЯ ********************************/
+class ClassSceneAnimation {
+    constructor() {
+        this.container = document.querySelector(".container"); //контейнер всей сцены
+        this.canvas = document.querySelector("canvas"); // "экранный" канвас
+        this.context = this.canvas.getContext("2d", { willReadFrequently: true });
+        this.height = this.canvas.height = img_height; //вертикальное разрешение
+        this.width; //зависит от параметров экрана
+        this.animationID; // requestID анимации, для остановки
+        this.amination_started = false; //флаг, true - анимация происходит в настоящий момент
+        this.frm_total = images_total + images_motanie; //общее количество кадров + ещё одно мотание в конце
+        this.frm_center = ~~(this.frm_total / 2); //центральный кадр
+        this.frm_current = this.frm_center; //текущий кадр анимации (при запуске - центр)
+        this.frm_period = images_povorot + images_motanie;
+        this.img_sx; //(px) смещение кадра влево (для вертик режима)
+        this.imgnum = []; //массив соответствия номера кадра и номера изображения и задержки кадров
+        for (let frm = 1; frm <= this.frm_total; frm++) { //TODO решить вопрос с переходом через ноль в функции move()
+            let center = images_total / 2; //todo важно правильно рассчитать центровой кадр
+            let img = (frm > center ? frm - center : frm + center);
+            let chet = ~~(~~(frm / 15) % 2); //номера кадров поворота todo (15, но нудна формула)  (~~ целая часть  % остаток от деления)
+            let del = (chet ? delay_povorot : delay_motfast); //задержка кадра в зависимости от номера кадра
+            this.imgnum[frm] = { image: img, delay: del }; //каждому кадру соответствует номер изображения и задержка анимации
+        }
+        window.addEventListener("resize", () => setTimeout(() => { this.resize() }, 100));
+        document.querySelector(".move_center").addEventListener("click", () => {
+            this.stopmove(); //остановить мотание (иначе будет накладка анимаций)
+            this.move(this.frm_center);
+            frame_start = 61; //todo старт первичного мотания
+            frame_end = 75; //todo конец первичного мотания
+        });
+        document.querySelector(".move_forward").addEventListener("click", () => { this.turn_forward() });
+        document.querySelector(".move_backward").addEventListener("click", () => { this.turn_backward() });
+        this.resize(); //setTimeout(() => { this.resize() }, 100);
+    }
+
+    motion(dir) {
+        if (dir > 0)
+            this.move(frame_end, delay_motanie);
+        else
+            this.move(frame_start, delay_motanie);
+    };
+
+    turn_forward() { // поворот вперёд 
+        this.stopmove(); //остановить мотание (иначе будет накладка анимаций)
+        this.move(frame_end + images_povorot + 1); //анимация мотания до конца + поворот
+        if (frame_end < this.frm_total) {
+            frame_start += this.frm_period; //старт следующего мотания
+            frame_end += this.frm_period; //конец следующего мотания
+            Images.loadall(frame_start, frame_end + images_povorot); //загрузка следующего мотания!
+        }
+    };
+
+    turn_backward() { // поворот назад 
+        this.stopmove(); //остановить мотание (иначе будет накладка анимаций)
+        this.move(frame_start - (images_povorot + 1));
+        if (1 < frame_start) {
+            frame_start -= this.frm_period; //старт следующего мотания
+            frame_end -= this.frm_period; //конец следующего мотания
+            Images.loadall(frame_start - images_povorot, frame_end); //загрузка следующего мотания!
+        }
+    };
+
+    resize() { // resize сцены (пересчёт размеров канваса + отрисовка текущего кадра)
+        this.img_sx = ((innerWidth < innerHeight) ? ~~(this.container.clientHeight * 0.3) : 0); //смещение кадра влево для вертик режима
+        this.width = this.canvas.width = img_height * (this.container.clientWidth / this.container.clientHeight);  //горизонтальное разрешение
+        this.move();
+    }
+
+    move(last = this.frm_current, delay) { //first - первый кадр, last - последений кадр, delay - задержка кадра
+        if (this.amination_started) return; //блокирование повторного запуска анимации
+        this.amination_started = true;
+        let time_start = performance.now(); //время старта отрисовки кадра
+        let error_timer = 0; //защита от бесконечного цикла попытки скачать несуществующий файл изображения
+        let direction = (this.frm_current <= last ? +1 : -1); //направление анимации
+
+        const animate = (time) => {
+            let dl = (delay ? delay_motanie : this.imgnum[this.frm_current].delay);
+            if (time - time_start > dl) {
+                time_start = time;
+                LAB(`${(MOBILE ? "mobile" : "desktop")} : ${this.imgnum[this.frm_current].image}.jpg : ${dl}ms`); //DEBUG
+                let H = House.img[this.frm_current];
+                let D = Doors.img[this.frm_current];
+                if (H && D) { //если оба слайда загружены
+                    if (MOBILE) { //режим background-image (в мобильном режиме canvas тормозит)
+                        this.container.style.background = "url(" + D.src + ") left top / cover";
+                        this.container.style.background += ", url(" + H.src + ") left top / cover";
+                        this.container.style.backgroundPosition = -this.img_sx + "px";
+                    } else { //режим canvas
+                        this.context.drawImage(H, this.img_sx, 0, this.width, this.height, 0, 0, this.width, this.height);
+                        this.context.drawImage(D, this.img_sx, 0, this.width, this.height, 0, 0, this.width, this.height);
+                    }
+                    this.frm_current += direction; //примечание: в конце номер будет на 1 отличаться от текущего положения
+                } else { //ждём когда загрузится нужный кадр
+                    Images.loadall(this.frm_current); //на всяк случай кидаем этот кадр в загрузку
+                    if (error_timer++ > 100) {  //если кадр таки не загрузится
+                        console.log("error animation frame:" + this.frm_current + " not found!");
+                        this.stopmove();
+                    }
+                }
+            }
+            this.animationID = requestAnimationFrame(animate);
+            if (this.frm_current == last + direction
+                || this.frm_current < 1
+                || this.frm_current > this.frm_total) {
+                this.frm_current -= direction; // откат на один шаг
+                this.stopmove();
+                if (this.frm_current < 1) this.frm_current = 1; //коррекция на всяк случай
+                if (this.frm_current > this.frm_total) this.frm_current = this.frm_total; //коррекция на всяк случай
+            }
+        };
+
+        this.animationID = requestAnimationFrame(animate);
+    }
+
+    stopmove() {
+        cancelAnimationFrame(this.animationID);
+        this.amination_started = false;
+        Doors.display(60 <= this.frm_current && this.frm_current <= 76);
+    }
+}
+
 
 //***************** CLASS домиков/background *************************/
 class ClassHouseObject {
@@ -58,7 +204,7 @@ class ClassHouseObject {
         };
         this.list_houses = document.querySelectorAll('.decor_house');
         this.list_houses.forEach((btn, i) => btn.addEventListener('click', () => { this.check(i) }));
-        mouse_area.addEventListener('click', () => {
+        document.querySelector(".mouse-area").addEventListener('click', () => {
             this.list_houses[this.sub].removeAttribute("data-selected");
             this.sub++;
             if (this.sub > this.arr_houses.length - 1) this.sub = 0;
@@ -69,7 +215,7 @@ class ClassHouseObject {
     init() {
         this.list_houses[this.sub].setAttribute("data-selected", null);
         document.querySelector(".control_decor_title span").textContent = this.arr_houses[this.sub].name;
-        Images.load(this, frame_start - frames_povorot, frame_end + frames_povorot); //предзагрузка кадров поворотов и мотания
+        Images.load(this, frame_start - images_povorot, frame_end + images_povorot); //предзагрузка кадров поворотов и мотания
     }
     check(new_sub) {
         this.list_houses[this.sub].removeAttribute("data-selected");
@@ -79,6 +225,7 @@ class ClassHouseObject {
         window.setTimeout(() => { Scene.move() }, 100);
     }
 }
+
 
 //***************** CLASS дверей/object *************************/
 class ClassDoorsObject {
@@ -97,24 +244,21 @@ class ClassDoorsObject {
             () => { this.check(-1) });
         document.querySelectorAll('.door_next').forEach((button) => button.addEventListener('click',
             () => { this.check(+1) }));
-
-        window.addEventListener("resize", this.initSlider());
-        this.initSlider();
+        window.addEventListener("resize", () => this.initSlider());
         this.init();
     }
     initSlider() {
         this.sliderWidth = this.slider.clientWidth;
         this.sliderLine.style.width = this.sliderWidth * this.sliderNumb + 'px';
-        this.roll();
-    }
-    roll() {
-        this.sliderLine.style.transform = 'translate(-' + this.sub * this.sliderWidth + 'px)';
+        this.rollSlider();
     }
     init() {
-        this.roll();
+        this.initSlider();
         this.title.textContent = this.sub;
-        Images.load(this, frame_start, frame_end);  //предзагрузка кадров текущего мотания
-        Images.load(this, frame_start - frames_povorot, frame_end + frames_povorot); //предзагрузка кадров поворота 
+        Images.load(this, frame_start - images_povorot, frame_end + images_povorot); //предзагрузка кадров поворотов и мотания
+    }
+    rollSlider() {
+        this.sliderLine.style.transform = 'translate(-' + this.sub * this.sliderWidth + 'px)';
     }
     check(dir) { // if (!dir) dir = 0;
         this.sub += dir;
@@ -131,170 +275,16 @@ class ClassDoorsObject {
 }
 
 
-//мотание 
-var lastX, newX, offsetX; //предыдущееи и новое положение мышки/тача
-if (MOBILE) { //TODO доработать
-    document.addEventListener('touchstart', (e) => { lastX = e.changedTouches[0].clientX; });
-    document.addEventListener('touchend', (e) => {
-        newX = e.changedTouches[0].clientX;
-        offsetX = newX - lastX;
-        if (Math.abs(offsetX) > 100)
-            if (offsetX < 0)
-                Scene.turn_forward();
-            else
-                Scene.turn_backward();
-        else if (Math.abs(offsetX) > 10)
-            Motion(offsetX);
-
-    });
-} else {
-    mouse_area.addEventListener("mousemove", (e) => {
-        newX = e.clientX;
-        if (!lastX) lastX = newX; //инициализация начального положения
-        offsetX = newX - lastX;
-        if (Math.abs(offsetX) > 3)
-            Motion(offsetX);
-        lastX = newX;
-    });
-}
-
-function Motion(dir) {
-    if (dir > 0)
-        Scene.move(frame_end, delay_motanie);
-    else
-        Scene.move(frame_start, delay_motanie);
-};
-
-
-/************************** CLASS АНИМАЦИЯ ********************************/
-class ClassSceneAnimation {
-    constructor() {
-        this.container = document.querySelector(".container"); //контейнер всей сцены
-        this.canvas = document.querySelector("canvas"); // "экранный" канвас
-        this.context = this.canvas.getContext("2d", { willReadFrequently: true });
-        this.width;
-        this.height;
-        this.frame_current = frame_center; //текущий кадр анимации (при запуске - центр)
-        this.animationID; // requestID анимации, для остановки
-        this.amination_started = false; //флаг, true - анимация происходит в настоящий момент
-        this.img_sx; //смещение кадра(фона) для вертик режима
-        this.imgnum = []; //массив соответствия номера кадра и номера изображения и задержки кадров
-        for (let frm = 1; frm <= frame_total; frm++) { //TODO решить вопрос с переходом через ноль в функции move()
-            let center = (frame_total - frames_motanie) / 2; //todo правильно рассчитать центровой кадр
-            let img = (frm > center ? frm - center : frm + center);
-            let chet = ~~(~~(frm / 15) % 2); //номера кадров поворота todo (15, но нудна формула)  (~~ целая часть  % остаток от деления)
-            let del = (chet ? delay_povorot : delay_motanie_fast); //задержка кадра в зависимости от номера кадра
-            this.imgnum[frm] = { image: img, delay: del }; //каждому кадру соответствует номер изображения и задержка анимации
-        }
-        window.addEventListener("resize", () => setTimeout(() => { this.resize() }, 100));
-        document.querySelector(".move_center").addEventListener("click", () => {
-            this.stopmove(); //остановить мотание (иначе будет накладка анимаций)
-            this.move(frame_center);
-            frame_start = 61; //todo старт первичного мотания
-            frame_end = 75; //todo конец первичного мотания
-        });
-        document.querySelector(".move_forward").addEventListener("click", () => { this.turn_forward() });
-        document.querySelector(".move_backward").addEventListener("click", () => { this.turn_backward() });
-    }
-
-    turn_forward() { // поворот вперёд 
-        this.stopmove(); //остановить мотание (иначе будет накладка анимаций)
-        this.move(frame_end + frames_povorot + 1); //анимация мотания до конца + поворот
-        if (frame_end < frame_total) {
-            frame_start += n_pm; //старт следующего мотания
-            frame_end += n_pm; //конец следующего мотания
-            Images.loadall(frame_start, frame_end + frames_povorot); //загрузка следующего мотания!
-        }
-    };
-
-    turn_backward() { // поворот назад 
-        this.stopmove(); //остановить мотание (иначе будет накладка анимаций)
-        this.move(frame_start - (frames_povorot + 1));
-        if (1 < frame_start) {
-            frame_start -= n_pm; //старт следующего мотания
-            frame_end -= n_pm; //конец следующего мотания
-            Images.loadall(frame_start - frames_povorot, frame_end); //загрузка следующего мотания!
-        }
-    };
-
-    resize() { // resize сцены (пересчёт размеров канваса + отрисовка текущего кадра)
-        let modeVertical = (innerWidth < innerHeight)  //вертикальная ориентация (если iframe надо бы .visualViewport )
-        this.img_sx = (modeVertical ? Math.round(this.container.clientHeight * 0.3) : 0); //смещение кадра(фона) для вертик режима
-        this.height = this.canvas.height = img_height; //вертикальное разрешение
-        this.width = this.canvas.width = img_height * (this.container.clientWidth / this.container.clientHeight);  //горизонтальное разрешение
-        this.move();
-    }
-
-    move(last, delay) { //first - первый кадр, last - последений кадр, delay - задержка кадра
-        var THIS = this;
-        if (this.amination_started) return; //блокирование повторного запуска анимации
-        this.amination_started = true;
-        let time_start = performance.now(); //время старта отрисовки кадра
-        let error_timer = 0; //защита от бесконечного цикла попытки скачать несуществующий файл изображения
-        if (!last) last = this.frame_current; //если undefined - отобразить только текущий кадр
-        let direction = (this.frame_current <= last ? +1 : -1); //направление анимации
-
-        animate();
-
-        function animate(time) {
-            let dl = (delay ? delay_motanie : THIS.imgnum[THIS.frame_current].delay);
-            if (time - time_start > dl) {
-                time_start = time;
-                LAB(`${(MOBILE ? "mobile" : "desktop")} : ${THIS.imgnum[THIS.frame_current].image}.jpg : ${dl}ms`); //DEBUG
-                let H = House.img[THIS.frame_current];
-                let D = Doors.img[THIS.frame_current];
-                if (H && D) { //если оба слайда загружены
-                    if (MOBILE) { //режим background-image (в мобильном режиме canvas тормозит)
-                        this.container.style.background = "url(" + D.src + ") left top / cover";
-                        this.container.style.background += ", url(" + H.src + ") left top / cover";
-                        this.container.style.backgroundPosition = -THIS.img_sx + "px";
-                    } else { //режим canvas
-                        THIS.context.drawImage(H, THIS.img_sx, 0, THIS.width, THIS.height, 0, 0, THIS.width, THIS.height);
-                        THIS.context.drawImage(D, THIS.img_sx, 0, THIS.width, THIS.height, 0, 0, THIS.width, THIS.height);
-                    }
-                    THIS.frame_current += direction; //примечание: в конце номер будет на 1 отличаться от текущего положения
-                } else { //ждём когда загрузится нужный кадр
-                    Images.loadall(THIS.frame_current); //на всяк случай кидаем этот кадр в загрузку
-                    error_timer++;
-                    if (error_timer > 100) {  //если кадр таки не загрузится
-                        console.log("error animation frame:" + THIS.frame_current + " not found!");
-                        THIS.stopmove();
-                    }
-                }
-            }
-
-            THIS.animationID = requestAnimationFrame(animate);
-            if (THIS.frame_current == last + direction || THIS.frame_current < 1 || THIS.frame_current > frame_total) {
-                THIS.frame_current -= direction; // откат на один шаг
-                if (THIS.frame_current < 1) THIS.frame_current = 1; //коррекция на всяк случай
-                if (THIS.frame_current > frame_total) THIS.frame_current = frame_total; //коррекция на всяк случай
-                THIS.stopmove();
-            }
-        };
-
-    }
-
-    stopmove() {
-        cancelAnimationFrame(this.animationID);
-        Doors.display(60 < this.frame_current && this.frame_current < 76);
-        this.amination_started = false;
-    }
-}
-
 /************* CLASS загрузка файлов **************/
 class ClassImagesLoader {
-    constructor() {
-        this.count = 0; // счётчик запущеных загрузок файлов
-        this.div_ind = document.querySelector(".loader");
-    }
-    loadall(start, end) { //start, end - номера первого и последнего кадра
-        if (!end) end = start; //если задан один параметр - грузим один (start) кадр
+    constructor() { }
+    loadall(start, end = start) { //start, end - номера первого и последнего кадра (если задан один параметр - грузим один (start) кадр)
         this.load(House, start, end);   //загрузка кадров домика
         this.load(Doors, start, end);   //загрузка кадров двери
     }
     load(obj, start, end) { //obj = текущий объект - House или Doors
-        if (end > frame_total) end = frame_total; //foolproof ограничить верхний предел
-        if (start < 0) start = 1; //foolproof ограничить нижний предел
+        if (end > Scene.frm_total) end = Scene.frm_total; //коррекция на всяк случай ограничить верхний предел
+        if (start < 0) start = 1; //коррекция на всяк случай ограничить нижний предел
         this.display(end - start + 1);  //добавить в счетчик новые кадры
         for (let frm = start; frm <= end; frm++) {
             if (obj.img[frm] != undefined) { //если уже загружен (=image) или грузится (= 0)
@@ -308,10 +298,14 @@ class ClassImagesLoader {
                 obj.img[frm] = image;
                 this.display(-1);
             }
-            image.onerror = () =>
+            image.onerror = () => {
+                console.log("error loading image:" + image.src + " !");
                 this.display(-1);
+            }
         }
     }
+    count = 0; // счётчик запущеных загрузок файлов
+    div_ind = document.querySelector(".loader");
     display(dif) {
         this.count += dif;
         if (this.count > 0)

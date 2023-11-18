@@ -266,7 +266,7 @@ svg:active polyline {
 /************* вертикальный режим ****************/
 @media screen and (orientation: portrait) {
 	.controls-buttons-area {
-		visibility: hidden;
+		display: none;
 	}
 
 	.door_area {

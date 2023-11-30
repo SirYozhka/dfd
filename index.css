@@ -95,9 +95,7 @@ canvas {
 }
 
 /**************** общие стили кнопок *************************/
-.decor_house,
-.slider,
-.move_center {
+:is(.decor_house, .slider, .move_center) {
 	height: 9vh;
 	width: 9vh;
 	min-height: 30px;
@@ -111,15 +109,15 @@ canvas {
 	box-shadow: var(--schadow);
 }
 
-.decor_house:hover,
-.slider:hover,
-.move_center:hover {
+
+:is(.decor_house, .slider, .move_center):hover {
 	border: 0.5vh solid var(--ctr-hover);
 	outline: 0.3vh solid var(--ctr-hover);
 }
 
 /****************** кнопки дом (background) ****************************/
 .decor_house {
+	appearance: none;
 	position: relative;
 	font-size: 5vh;
 	font-weight: 100;
@@ -128,7 +126,8 @@ canvas {
 }
 
 .decor_house[data-selected]::before {
-	content: "\2714";
+	content: "✔";
+	/*content: "\2714";*/
 }
 
 .decor_house:hover::after {
@@ -240,16 +239,15 @@ svg:active polyline {
 /*********************** индикатор загрузки **********************************/
 .load_spinner {
 	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	height: 14vh;
-	width: 14vh;
-	border: 2vh solid white;
-	border-top: 2vh solid #444;
+	top: 1;
+	left: 1;
+	/*	transform: translate(-50%, -50%);*/
+	height: 9vh;
+	width: 9vh;
+	border: 0.5vh solid #444;
 	border-radius: 50%;
 	animation: spin 1s linear infinite;
-	backdrop-filter: blur(10px);
+	/*backdrop-filter: blur(5px);*/
 	visibility: hidden;
 }
 
